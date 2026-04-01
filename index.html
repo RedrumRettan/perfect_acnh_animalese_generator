@@ -493,16 +493,6 @@ function resolveSingleToken(ch) {
   // Whitespace → pause
   if (/[\s\n\t]/.test(ch)) return { label:'·', url:null, isSpace:true };
 
-  // Period → dedicated dot sound
-  if (ch === '.' || ch === '…') {
-    return { label:'.', url:`${BASE}/others/Voice_Dot.wav`, isPunct:true };
-  }
-
-  // Other punctuation → short pause
-  if (/[,;:!?'"()\-–—\/\\]/.test(ch)) {
-    return { label:ch, url:null, isSpace:true, isPunct:true };
-  }
-
   // Digit
   if (/[0-9]/.test(ch)) {
     // swkbd only for bonyari
@@ -533,8 +523,8 @@ function resolveSingleToken(ch) {
     return { label:ch, url:kanaUrl(syl) };
   }
 
-  // Unknown → skip
-  return { label:ch, url:null, isSpace:true };
+  // Any other special character → dedicated dot sound
+  return { label:ch, url:`${BASE}/others/Voice_Dot.wav`, isPunct:true };
 }
 
 function kanaUrl(syllable) {
