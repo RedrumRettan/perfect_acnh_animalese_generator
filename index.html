@@ -599,15 +599,6 @@ function buildTokens(text) {
       const word = text.slice(i, j);
       let k = 0;
       while (k < word.length) {
-        const cur = word[k];
-        const nxt = word[k + 1];
-        if (/[aeiou]/i.test(cur) && nxt && /h/i.test(nxt)) {
-          const vowelTok = resolveSingleToken(cur);
-          out.push({ label: `${cur}${nxt}`, url: vowelTok.url, silentH: true });
-          k += 2;
-          continue;
-        }
-
         const remaining = word.slice(k).toLowerCase();
         let matched = null;
         for (let len = Math.min(4, remaining.length); len >= 2; len--) {
@@ -618,6 +609,14 @@ function buildTokens(text) {
           out.push({ label:word.slice(k, k + matched.length), url:kanaUrl(matched) });
           k += matched.length;
         } else {
+          const cur = word[k];
+          const nxt = word[k + 1];
+          if (/[aeiou]/i.test(cur) && nxt && /h/i.test(nxt)) {
+            const vowelTok = resolveSingleToken(cur);
+            out.push({ label: `${cur}${nxt}`, url: vowelTok.url, silentH: true });
+            k += 2;
+            continue;
+          }
           out.push(resolveSingleToken(word[k]));
           k += 1;
         }
