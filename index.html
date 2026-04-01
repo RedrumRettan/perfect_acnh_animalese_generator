@@ -317,8 +317,8 @@
         <div class="mt-3 text-sm leading-relaxed space-y-2 opacity-90" style="color:#7a4f2d;">
           <p><strong>Voice folders</strong> represent ACNH personality types — each has a unique tone. Audio is streamed live from
             <a href="https://github.com/RedrumRettan/perfect_acnh_animalese_generator" target="_blank" class="underline" style="color:#3abcb1;">the GitHub repo</a>.</p>
-          <p><strong>How text converts:</strong> Each letter maps to a KanaEx syllable (vowel-chain phonetics).
-             When locale = English/Deutsch and the voice is <em>Bonyari</em>, letters with dedicated swkbd samples (F G J N R Z in EN; J Y in DE) use the real per-letter pronunciations.</p>
+          <p><strong>How text converts:</strong> Letter combinations that match available kana clips (for example <em>ba</em>, <em>hyo</em>, <em>iyu</em>) are grouped into one syllable token and play the matching sample.
+             When locale = English/Deutsch and the voice is <em>Bonyari</em>, single letters with dedicated swkbd samples (F G J N R Z in EN; J Y in DE) use the real per-letter pronunciations.</p>
           <p><strong>Export WAV</strong> stitches samples via Web Audio OfflineAudioContext into one downloadable file.</p>
           <div class="mt-2 p-2 rounded-lg text-xs" style="background:#f5e6cc; border:1px solid #c47d45;">
             <strong>Voices:</strong> aneki (older sister) · bonyari (airhead) · futsu (normal) · genki (peppy) ·
@@ -337,7 +337,11 @@ document.addEventListener('DOMContentLoaded', () => {
 /* ============================================================
    CONSTANTS
 ============================================================ */
-const BASE = 'https://raw.githubusercontent.com/RedrumRettan/perfect_acnh_animalese_generator/main/acnh_talking_sounds';
+const pagePath = window.location.pathname;
+const pageDir = pagePath.endsWith('/')
+  ? pagePath
+  : (pagePath.includes('.') ? pagePath.slice(0, pagePath.lastIndexOf('/') + 1) : `${pagePath}/`);
+const BASE = `${window.location.origin}${pageDir}acnh_talking_sounds`;
 
 const VOICE_TYPES = [
   { id:'aneki',    label:'Aneki',     emoji:'👧', desc:'Older Sister — bright & bubbly' },
@@ -364,26 +368,34 @@ const VOICE_FILE = {
    ALL syllables confirmed from repo listing.
 ============================================================ */
 
-// Full confirmed syllable set (vowel-only structure)
 const KANA_SYLLABLES = new Set([
-  'aa','ae','ai','ao','au','an',
-  'aha','ahe','ahi','aho','ahu',
-  'awa','awe','awi','awo',
-  'aya','aye','ayo','ayu',
-  'ea','ee','ei','eo','eu','en',
-  'eha','ehe','ehi','eho','ehu',
-  'ewa','ewe','ewi','ewo',
-  'ia','ie','ii','io','iu','in',
-  'iha','ihe','ihi','iho','ihu',
-  'iwa','iwe','iwi','iwo',
-  'oa','oe','oi','oo','ou','on',
-  'oha','ohe','ohi','oho','ohu',
-  'owa','owe','owi','owo',
-  'oya','oye','oyo','oyu',
-  'ua','ue','ui','uo','uu','un',
-  'uha','uhe','uhi','uho','uhu',
-  'uwa','uwe','uwi','uwo',
+  'a', 'ba', 'be', 'bi', 'bo', 'bu', 'bya', 'bye', 'byo', 'byu', 'cha', 'che', 'chi', 'cho', 'chu', 'da', 'de', 'di', 'do', 'du', 'dyu', 'e', 'fa', 'fe', 'fi', 'fo', 'fyo', 'fyu', 'ga', 'ge', 'gi', 'go', 'gu', 'gwa', 'gwe', 'gwi', 'gwo', 'gya', 'gye', 'gyo', 'gyu', 'ha', 'he', 'hi', 'ho', 'hu', 'hya', 'hye', 'hyo', 'hyu', 'i', 'ja', 'je', 'jo', 'ju', 'ka', 'ke', 'ki', 'ko', 'ku', 'kwa', 'kwe', 'kwi', 'kwo', 'kya', 'kye', 'kyo', 'kyu', 'ma', 'me', 'mi', 'mo', 'mu', 'mya', 'mye', 'myo', 'myu', 'n', 'na', 'ne', 'ni', 'no', 'nu', 'nya', 'nye', 'nyo', 'nyu', 'o', 'pa', 'pe', 'pi', 'po', 'pu', 'pya', 'pye', 'pyo', 'pyu', 'ra', 're', 'ri', 'ro', 'ru', 'rya', 'rye', 'ryo', 'ryu', 'sa', 'se', 'sha', 'sho', 'shu', 'si', 'so', 'su', 'swi', 'sye', 'ta', 'te', 'ti', 'to', 'tsa', 'tse', 'tso', 'tsu', 'tswi', 'tu', 'tyu', 'u', 'wa', 'we', 'wi', 'wo', 'ya', 'ye', 'yo', 'yu', 'za', 'ze', 'zi', 'zo', 'zu', 'zwi'
 ]);
+
+const KANA_EX_SYLLABLES = new Set([
+  'aa', 'ae', 'aha', 'ahe', 'ahi', 'aho', 'ahu', 'ai', 'an', 'ao', 'au', 'awa', 'awe', 'awi', 'awo', 'aya', 'aye', 'ayo', 'ayu', 'ea', 'ee', 'eha', 'ehe', 'ehi', 'eho', 'ehu', 'ei', 'en', 'eo', 'eu', 'ewa', 'ewe', 'ewi', 'ewo', 'eya', 'eye', 'eyo', 'eyu', 'ia', 'ie', 'iha', 'ihe', 'ihi', 'iho', 'ihu', 'ii', 'in', 'io', 'iu', 'iwa', 'iwe', 'iwi', 'iwo', 'iya', 'iyo', 'iyu', 'oa', 'oe', 'oha', 'ohe', 'ohi', 'oho', 'ohu', 'oi', 'on', 'oo', 'ou', 'owa', 'owe', 'owi', 'owo', 'oya', 'oye', 'oyo', 'oyu', 'ua', 'ue', 'uha', 'uhe', 'uhi', 'uho', 'uhu', 'ui', 'un', 'uo', 'uu', 'uwa', 'uwe', 'uwi', 'uwo', 'uya', 'uye', 'uyo', 'uyu'
+]);
+
+const ALL_KANA_SYLLABLES = new Set([...KANA_SYLLABLES, ...KANA_EX_SYLLABLES]);
+const BONYARI_FUTSU_KANAEX = new Set([
+  'oa','oe','oha','ohe','ohi','oho','ohu','oi','on','oo','ou','owa','owe','owi','owo','oya','oye','oyo','oyu',
+  'ua','ue','uha','uhe','uhi','uho','uhu','ui','un','uo','uu','uwa','uwe','uwi','uwo','uya','uye','uyo','uyu'
+]);
+
+const VOICE_KANAEX_OVERRIDES = {
+  futsu: new Set([
+    'aa','ae','aha','ahe','ahi','aho','ahu','ai','an','ao','au','awa','awe','awi','awo','aya','aye','ayo','ayu',
+    'ea','ee','eha','ehe','ehi','eho','ehu','ei','en','eo','eu','ewa','ewe','ewi','ewo','eya','eye','eyo','eyu',
+    'ia','ie','iha','ihe','ihi','iho','ihu','ii','in','io','iu','iwa','iwe','iwi','iwo','iya','iyo','iyu'
+  ]),
+  ghost: new Set(['aa','ae','ai','an','ao','au','ea','ee','ei','en','eo','eu','ia','ie','ii','in','io','iu','oa','oe','oi','on','oo','ou','ua','ue','ui','un','uo','uu']),
+  hakihaki: new Set(['oa','oe','oha','ohe','ohi','oho','ohu','oi','on','oo','ou','owa','owe','owi','owo','oya','oye','oyo','oyu','ua','ue','uha','uhe','uhi','uho','uhu','ui','un','uo','uu','uwa','uwe','uwi','uwo','uya','uye','uyo','uyu']),
+};
+
+const VOICE_KANA_OVERRIDES = {
+  ghost: new Set(['a','e','i','n','o','u']),
+  hakihaki: new Set(['a','ba','be','bi','bo','bu','bya','bye','byo','byu','cha','che','chi','cho','chu','da','de','di','do','du','dyu','e','fa','fe','fi','fo','fyo','fyu','ga','ge','gi','go','gu','gwa','gwe','gwi','gwo','gya','gye','gyo','gyu','ha','he','hi','ho','hu','hya','hye','hyo','hyu','i','ja','je','jo','ju','ka','ke','ki','ko','ku','kwa','kwe','kwi','kwo','kya','kye','kyo','kyu','ma','me','mi','mo','mu','mya','mye','myo','myu','n','na','ne','ni','no','nu','nya','nye','nyo','nyu','o','pa','pe','pi','po','pu','pya','pye','pyo','pyu','ra']),
+};
 
 // English letter → best-matching confirmed KanaEx syllable
 // Strategy: map consonant sounds to phonetically close vowel chains
@@ -475,21 +487,11 @@ window.clearText = clearText;
    TOKEN RESOLUTION
    Each character → { label, url, isSpace, isPunct }
 ============================================================ */
-function resolveToken(ch) {
+function resolveSingleToken(ch) {
   const upper = ch.toUpperCase();
 
   // Whitespace → pause
   if (/[\s\n\t]/.test(ch)) return { label:'·', url:null, isSpace:true };
-
-  // Period → dedicated dot sound
-  if (ch === '.' || ch === '…') {
-    return { label:'.', url:`${BASE}/others/Voice_Dot.wav`, isPunct:true };
-  }
-
-  // Other punctuation → short pause
-  if (/[,;:!?'"()\-–—\/\\]/.test(ch)) {
-    return { label:ch, url:null, isSpace:true, isPunct:true };
-  }
 
   // Digit
   if (/[0-9]/.test(ch)) {
@@ -521,19 +523,69 @@ function resolveToken(ch) {
     return { label:ch, url:kanaUrl(syl) };
   }
 
-  // Unknown → skip
-  return { label:ch, url:null, isSpace:true };
+  // Any other special character → dedicated dot sound
+  return { label:ch, url:`${BASE}/others/Voice_Dot.wav`, isPunct:true };
 }
 
 function kanaUrl(syllable) {
-  // Validate syllable exists; fall back to 'aa' if not
-  const syl = KANA_SYLLABLES.has(syllable) ? syllable : 'aa';
+  const syl = pickAvailableSyllable(syllable);
   const vName = VOICE_FILE[selectedVoice] || 'Futsu';
-  return `${BASE}/${selectedVoice}/Voice_${vName}_KanaEx_${syl}.wav`;
+  if (voiceHasKanaEx(syl)) {
+    const exVoiceName = (selectedVoice === 'bonyari' && BONYARI_FUTSU_KANAEX.has(syl)) ? 'Futsu' : vName;
+    return `${BASE}/${selectedVoice}/Voice_${exVoiceName}_KanaEx_${syl}.wav`;
+  }
+  return `${BASE}/${selectedVoice}/Voice_${vName}_Kana_${syl}.wav`;
+}
+
+function voiceKanaSet() { return VOICE_KANA_OVERRIDES[selectedVoice] || KANA_SYLLABLES; }
+function voiceKanaExSet() { return VOICE_KANAEX_OVERRIDES[selectedVoice] || KANA_EX_SYLLABLES; }
+function voiceHasKana(syl) { return voiceKanaSet().has(syl); }
+function voiceHasKanaEx(syl) { return voiceKanaExSet().has(syl); }
+function voiceHasSyllable(syl) { return voiceHasKanaEx(syl) || voiceHasKana(syl); }
+
+function pickAvailableSyllable(syllable) {
+  const syl = ALL_KANA_SYLLABLES.has(syllable) ? syllable : 'aa';
+  if (voiceHasSyllable(syl)) return syl;
+  const fallbackVowel = [...syl].reverse().find(ch => 'aeiou'.includes(ch)) || 'a';
+  if (voiceHasKanaEx(fallbackVowel + fallbackVowel)) return fallbackVowel + fallbackVowel;
+  if (voiceHasKana(fallbackVowel)) return fallbackVowel;
+  if (voiceHasKanaEx('aa')) return 'aa';
+  if (voiceHasKana('a')) return 'a';
+  return [...voiceKanaSet()][0] || [...voiceKanaExSet()][0] || 'a';
 }
 
 function buildTokens(text) {
-  return [...text].map(ch => resolveToken(ch));
+  const out = [];
+  let i = 0;
+  while (i < text.length) {
+    const ch = text[i];
+    if (/[A-Za-z]/.test(ch)) {
+      let j = i;
+      while (j < text.length && /[A-Za-z]/.test(text[j])) j++;
+      const word = text.slice(i, j);
+      let k = 0;
+      while (k < word.length) {
+        const remaining = word.slice(k).toLowerCase();
+        let matched = null;
+        for (let len = Math.min(4, remaining.length); len >= 2; len--) {
+          const cand = remaining.slice(0, len);
+          if (ALL_KANA_SYLLABLES.has(cand) && voiceHasSyllable(cand)) { matched = cand; break; }
+        }
+        if (matched) {
+          out.push({ label:word.slice(k, k + matched.length), url:kanaUrl(matched) });
+          k += matched.length;
+        } else {
+          out.push(resolveSingleToken(word[k]));
+          k += 1;
+        }
+      }
+      i = j;
+      continue;
+    }
+    out.push(resolveSingleToken(ch));
+    i += 1;
+  }
+  return out;
 }
 
 /* ============================================================
