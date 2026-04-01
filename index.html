@@ -327,7 +327,7 @@
           <p><strong>Voice folders</strong> represent ACNH personality types — each has a unique tone. Audio is streamed live from
             <a href="https://github.com/RedrumRettan/perfect_acnh_animalese_generator" target="_blank" class="underline" style="color:#3abcb1;">the GitHub repo</a>.</p>
           <p><strong>How text converts:</strong> Letter combinations that match available kana clips (for example <em>ba</em>, <em>hyo</em>, <em>iyu</em>) are grouped into one syllable token and play the matching sample.
-             When locale = English/Deutsch and the voice is <em>Bonyari</em>, single letters with dedicated swkbd samples (F G J N R Z in EN; J Y in DE) use the real per-letter pronunciations.</p>
+             For EN/DE localization, any available <em>swkbd</em> letter/digit sample for the selected voice is used automatically.</p>
           <p><strong>Export WAV</strong> stitches samples via Web Audio OfflineAudioContext into one downloadable file.</p>
           <div class="mt-2 p-2 rounded-lg text-xs" style="background:#f5e6cc; border:1px solid #c47d45;">
             <strong>Voices:</strong> aneki (older sister) · bonyari (airhead) · futsu (normal) · genki (peppy) ·
@@ -420,13 +420,17 @@ const LETTER_MAP = {
   '5':'uha','6':'uwa','7':'awa','8':'ahe','9':'un',
 };
 
-// swkbd files: only exist for BONYARI voice
-// swkbd_en: letters F G J N R Z  | digits 2 3 5 6 7 8 9
-// swkbd_de: letters J Y           | digits 0-9
-const SWKBD_EN_LETTERS = new Set(['F','G','J','N','R','Z']);
-const SWKBD_DE_LETTERS = new Set(['J','Y']);
-const SWKBD_EN_DIGITS  = new Set(['2','3','5','6','7','8','9']);
-const SWKBD_DE_DIGITS  = new Set(['0','1','2','3','4','5','6','7','8','9']);
+// swkbd localization samples available per locale + voice
+const SWKBD_INDEX = {
+  en: {
+    bonyari: { alph:new Set(['F','G','J','N','R','Z']), digit:new Set(['2','3','7','8']) },
+    futsu:   { alph:new Set(['C','E','F','G','Q','T','V','W','Y']), digit:new Set(['1','2','5','8']) },
+  },
+  de: {
+    bonyari: { alph:new Set(['J','Y']), digit:new Set(['0','1','2','3','4','5','6','7','8','9']) },
+    futsu:   { alph:new Set(['J','Y','Z']), digit:new Set(['0','1','3','4','5','7','8','9']) },
+  }
+};
 
 /* ============================================================
    STATE
@@ -471,8 +475,8 @@ function setLocale(loc) {
   document.getElementById('locale-en').className = `locale-badge ${loc==='en'?'active':'inactive'}`;
   document.getElementById('locale-de').className = `locale-badge ${loc==='de'?'active':'inactive'}`;
   const note = document.getElementById('locale-note');
-  if (loc === 'en') note.textContent = 'EN: letters F G J N R Z use authentic per-letter samples (Bonyari only)';
-  else               note.textContent = 'DE: letters J Y + digits 0–9 use authentic samples (Bonyari only)';
+  if (loc === 'en') note.textContent = 'EN swkbd: available letter/digit samples are used when present for the selected voice';
+  else               note.textContent = 'DE swkbd: available letter/digit samples are used when present for the selected voice';
   updatePreview();
 }
 
@@ -526,16 +530,15 @@ function resolveSingleToken(ch) {
   // Whitespace → pause
   if (/[\s\n\t]/.test(ch)) return { label:'·', url:null, isSpace:true };
 
+  const swkbdVoice = SWKBD_INDEX[currentLocale]?.[selectedVoice];
+
   // Digit
   if (/[0-9]/.test(ch)) {
-    // swkbd only for bonyari
-    if (selectedVoice === 'bonyari') {
-      const hasSwkbd = currentLocale === 'de' ? SWKBD_DE_DIGITS.has(ch) : SWKBD_EN_DIGITS.has(ch);
-      if (hasSwkbd) {
-        const folder  = currentLocale === 'de' ? 'swkbd_de' : 'swkbd_en';
-        const langTag = currentLocale === 'de' ? 'Ger' : 'Eng';
-        return { label:ch, url:`${BASE}/${folder}/Voice_Swkbd_Bonyari_Digit_${langTag}_${ch}.wav` };
-      }
+    if (swkbdVoice?.digit?.has(ch)) {
+      const folder  = currentLocale === 'de' ? 'swkbd_de' : 'swkbd_en';
+      const langTag = currentLocale === 'de' ? 'Ger' : 'Eng';
+      const vName = VOICE_FILE[selectedVoice] || 'Futsu';
+      return { label:ch, url:`${BASE}/${folder}/Voice_Swkbd_${vName}_Digit_${langTag}_${ch}.wav` };
     }
     const syl = LETTER_MAP[ch] || 'aa';
     return { label:ch, url:kanaUrl(syl) };
@@ -543,14 +546,11 @@ function resolveSingleToken(ch) {
 
   // Letter A–Z
   if (/[A-Za-z]/.test(ch)) {
-    // swkbd only for bonyari
-    if (selectedVoice === 'bonyari') {
-      const hasSwkbd = currentLocale === 'de' ? SWKBD_DE_LETTERS.has(upper) : SWKBD_EN_LETTERS.has(upper);
-      if (hasSwkbd) {
-        const folder  = currentLocale === 'de' ? 'swkbd_de' : 'swkbd_en';
-        const langTag = currentLocale === 'de' ? 'Ger' : 'Eng';
-        return { label:ch, url:`${BASE}/${folder}/Voice_Swkbd_Bonyari_Alph_${langTag}_${upper}.wav` };
-      }
+    if (swkbdVoice?.alph?.has(upper)) {
+      const folder  = currentLocale === 'de' ? 'swkbd_de' : 'swkbd_en';
+      const langTag = currentLocale === 'de' ? 'Ger' : 'Eng';
+      const vName = VOICE_FILE[selectedVoice] || 'Futsu';
+      return { label:ch, url:`${BASE}/${folder}/Voice_Swkbd_${vName}_Alph_${langTag}_${upper}.wav` };
     }
     const syl = LETTER_MAP[upper] || 'aa';
     return { label:ch, url:kanaUrl(syl) };
