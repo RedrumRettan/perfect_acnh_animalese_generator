@@ -324,11 +324,11 @@
           About &amp; How It Works
         </summary>
         <div class="mt-3 text-sm leading-relaxed space-y-2 opacity-90" style="color:#7a4f2d;">
-          <p><strong>Voice folders</strong> represent ACNH personality types — each has a unique tone. Audio is streamed live from
-            <a href="https://github.com/RedrumRettan/perfect_acnh_animalese_generator" target="_blank" class="underline" style="color:#3abcb1;">the GitHub repo</a>.</p>
-          <p><strong>How text converts:</strong> Letter combinations that match available kana clips (for example <em>ba</em>, <em>hyo</em>, <em>iyu</em>) are grouped into one syllable token and play the matching sample.
-             For EN/DE localization, any available <em>swkbd</em> letter/digit sample for the selected voice is used automatically.</p>
-          <p><strong>Export WAV</strong> stitches samples via Web Audio OfflineAudioContext into one downloadable file.</p>
+          <p><strong>Voice folders</strong> represent ACNH personality types — each has a unique tone. All audio is loaded from this app’s local <code>acnh_talking_sounds</code> files.</p>
+          <p><strong>How text converts:</strong> Valid multi-letter kana combinations (for example <em>ba</em>, <em>hyo</em>, <em>iyu</em>) are grouped into one token and use the matching clip. The tokenizer prefers longer matches first and can skip silent vowel+<em>h</em> patterns (like <em>oh</em> → <em>o</em>).</p>
+          <p><strong>Localization:</strong> For EN/DE, available <em>swkbd</em> letter/digit clips are used automatically for the selected voice, then fallback mapping is used when a localized clip is missing.</p>
+          <p><strong>Timing controls:</strong> Speed, pitch, gap (including negative values), and punctuation pause are all customizable. Punctuation pause is applied only for <em>, . ! ?</em> when followed by a space.</p>
+          <p><strong>Export WAV</strong> renders the same token/timing behavior into one downloadable file via Web Audio OfflineAudioContext.</p>
           <div class="mt-2 p-2 rounded-lg text-xs" style="background:#f5e6cc; border:1px solid #c47d45;">
             <strong>Voices:</strong> aneki (older sister) · bonyari (airhead) · futsu (normal) · genki (peppy) ·
             ghost (spooky) · hakihaki (jock) · kiza (snooty) · kowai (cranky) · otona (smug)
