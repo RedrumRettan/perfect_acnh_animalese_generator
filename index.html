@@ -588,6 +588,12 @@ function pickAvailableSyllable(syllable) {
 }
 
 function buildTokens(text) {
+  const normalizeSilentH = (word) => {
+    // Silence vowel+h at the end of a chunk or before consonants:
+    // "oh" -> "o", "ahn" -> "an", while keeping "aha"/"ohi" intact.
+    return word.replace(/([aeiou])h(?![aeiouy])/gi, '$1');
+  };
+
   const out = [];
   let i = 0;
   while (i < text.length) {
@@ -595,7 +601,7 @@ function buildTokens(text) {
     if (/[A-Za-z]/.test(ch)) {
       let j = i;
       while (j < text.length && /[A-Za-z]/.test(text[j])) j++;
-      const word = text.slice(i, j);
+      const word = normalizeSilentH(text.slice(i, j));
       let k = 0;
       while (k < word.length) {
         const remaining = word.slice(k).toLowerCase();
