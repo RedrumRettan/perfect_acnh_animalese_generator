@@ -251,14 +251,20 @@
             <span><i class="fa-solid fa-gauge-high mr-1"></i>Speed</span>
             <span id="speed-val" class="font-black" style="color:#6cbd45;">1.00×</span>
           </label>
-          <input type="range" id="speed-slider" min="0.4" max="2.5" step="0.05" value="1.0" oninput="document.getElementById(&#39;speed-val&#39;).textContent=parseFloat(this.value).toFixed(2)+&#39;×&#39;"/>
+          <div class="flex items-center gap-2">
+            <input type="range" id="speed-slider" min="0.4" max="2.5" step="0.05" value="1.0" class="flex-1"/>
+            <input type="number" id="speed-input" min="0.4" max="2.5" step="0.05" value="1.0" class="w-20 px-2 py-1 rounded border text-xs font-bold" style="border-color:#c47d45; color:#7a4f2d;"/>
+          </div>
         </div>
         <div>
           <label class="text-xs font-bold flex justify-between mb-2" style="color:#7a4f2d;">
             <span><i class="fa-solid fa-wave-square mr-1"></i>Pitch</span>
             <span id="pitch-val" class="font-black" style="color:#3abcb1;">1.00×</span>
           </label>
-          <input type="range" id="pitch-slider" min="0.5" max="2.0" step="0.05" value="1.0" oninput="document.getElementById(&#39;pitch-val&#39;).textContent=parseFloat(this.value).toFixed(2)+&#39;×&#39;"/>
+          <div class="flex items-center gap-2">
+            <input type="range" id="pitch-slider" min="0.5" max="2.0" step="0.05" value="1.0" class="flex-1"/>
+            <input type="number" id="pitch-input" min="0.5" max="2.0" step="0.05" value="1.0" class="w-20 px-2 py-1 rounded border text-xs font-bold" style="border-color:#3abcb1; color:#2f8d86;"/>
+          </div>
         </div>
       </div>
       <div class="mb-5">
@@ -266,7 +272,10 @@
           <span><i class="fa-solid fa-clock mr-1"></i>Gap between syllables</span>
           <span id="gap-val" class="font-black" style="color:#b08020;">30 ms</span>
         </label>
-        <input type="range" id="gap-slider" min="0" max="200" step="5" value="30" oninput="document.getElementById(&#39;gap-val&#39;).textContent=this.value+&#39; ms&#39;"/>
+        <div class="flex items-center gap-2">
+          <input type="range" id="gap-slider" min="-200" max="200" step="5" value="30" class="flex-1"/>
+          <input type="number" id="gap-input" min="-200" max="200" step="5" value="30" class="w-20 px-2 py-1 rounded border text-xs font-bold" style="border-color:#b08020; color:#7a4f2d;"/>
+        </div>
       </div>
 
       <!-- Action buttons -->
@@ -482,6 +491,30 @@ function clearText() {
   document.getElementById('char-preview-wrap').style.display = 'none';
 }
 window.clearText = clearText;
+
+function bindSliderNumber(sliderId, inputId, labelId, formatFn) {
+  const slider = document.getElementById(sliderId);
+  const input  = document.getElementById(inputId);
+  const label  = document.getElementById(labelId);
+  if (!slider || !input || !label) return;
+
+  const min = parseFloat(slider.min);
+  const max = parseFloat(slider.max);
+
+  const applyValue = (raw) => {
+    let value = parseFloat(raw);
+    if (Number.isNaN(value)) value = parseFloat(slider.value);
+    value = Math.min(max, Math.max(min, value));
+    slider.value = String(value);
+    input.value  = String(value);
+    label.textContent = formatFn(value);
+  };
+
+  slider.addEventListener('input', () => applyValue(slider.value));
+  input.addEventListener('input',  () => applyValue(input.value));
+  input.addEventListener('change', () => applyValue(input.value));
+  applyValue(slider.value);
+}
 
 /* ============================================================
    TOKEN RESOLUTION
@@ -895,6 +928,9 @@ function encodeWav(buffer) {
    INIT
 ============================================================ */
 buildVoiceGrid();
+bindSliderNumber('speed-slider', 'speed-input', 'speed-val', v => `${v.toFixed(2)}×`);
+bindSliderNumber('pitch-slider', 'pitch-input', 'pitch-val', v => `${v.toFixed(2)}×`);
+bindSliderNumber('gap-slider',   'gap-input',   'gap-val',   v => `${Math.round(v)} ms`);
 
 // Make global functions accessible
 window.setLocale    = setLocale;
