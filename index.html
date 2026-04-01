@@ -134,6 +134,7 @@
     }
     .char-pill.space  { background: #e8c87e; border-color: #c4a840; color: #7a5010; }
     .char-pill.punct  { background: #fdd0db; border-color: #d06080; color: #8a2040; }
+    .char-dim { opacity: 0.5; }
 
     input[type=range] { -webkit-appearance:none; height:8px; background:#e8c87e; border-radius:8px; outline:none; width:100%; }
     input[type=range]::-webkit-slider-thumb {
@@ -588,12 +589,6 @@ function pickAvailableSyllable(syllable) {
 }
 
 function buildTokens(text) {
-  const normalizeSilentH = (word) => {
-    // Treat "ah/eh/ih/oh/uh" patterns as silent-h pronunciations.
-    // This intentionally removes h after vowels anywhere in letter runs.
-    return word.replace(/([aeiou])h/gi, '$1');
-  };
-
   const out = [];
   let i = 0;
   while (i < text.length) {
@@ -601,9 +596,18 @@ function buildTokens(text) {
     if (/[A-Za-z]/.test(ch)) {
       let j = i;
       while (j < text.length && /[A-Za-z]/.test(text[j])) j++;
-      const word = normalizeSilentH(text.slice(i, j));
+      const word = text.slice(i, j);
       let k = 0;
       while (k < word.length) {
+        const cur = word[k];
+        const nxt = word[k + 1];
+        if (/[aeiou]/i.test(cur) && nxt && /h/i.test(nxt)) {
+          const vowelTok = resolveSingleToken(cur);
+          out.push({ label: `${cur}${nxt}`, url: vowelTok.url, silentH: true });
+          k += 2;
+          continue;
+        }
+
         const remaining = word.slice(k).toLowerCase();
         let matched = null;
         for (let len = Math.min(4, remaining.length); len >= 2; len--) {
@@ -642,7 +646,17 @@ function updatePreview() {
     const pill = document.createElement('span');
     pill.className = `char-pill ${tok.isSpace?'space':''} ${tok.isPunct?'punct':''}`;
     pill.dataset.idx = i;
-    pill.textContent = tok.label;
+    if (tok.silentH && tok.label.length >= 2) {
+      const main = document.createElement('span');
+      main.textContent = tok.label.slice(0, -1);
+      const dim = document.createElement('span');
+      dim.className = 'char-dim';
+      dim.textContent = tok.label.slice(-1);
+      pill.appendChild(main);
+      pill.appendChild(dim);
+    } else {
+      pill.textContent = tok.label;
+    }
     el.appendChild(pill);
   });
 }
@@ -811,7 +825,17 @@ function buildSpeakingDisplay(tokens) {
     const pill = document.createElement('span');
     pill.className = `char-pill ${tok.isSpace?'space':''} ${tok.isPunct?'punct':''}`;
     pill.dataset.idx = i;
-    pill.textContent = tok.label;
+    if (tok.silentH && tok.label.length >= 2) {
+      const main = document.createElement('span');
+      main.textContent = tok.label.slice(0, -1);
+      const dim = document.createElement('span');
+      dim.className = 'char-dim';
+      dim.textContent = tok.label.slice(-1);
+      pill.appendChild(main);
+      pill.appendChild(dim);
+    } else {
+      pill.textContent = tok.label;
+    }
     el.appendChild(pill);
   });
 }
