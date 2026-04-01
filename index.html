@@ -1,0 +1,855 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ACNH Animalese Generator</title>
+
+  <meta name="description" content="Generate perfect Animal Crossing: New Horizons animalese phrases with authentic voice sounds."/>
+  <meta property="og:title" content="ACNH Animalese Generator"/>
+  <meta property="og:description" content="Generate perfect Animal Crossing: New Horizons animalese phrases with authentic voice sounds."/>
+  <meta property="og:url" content="https://www.onspace.ai"/>
+  <meta property="og:type" content="website"/>
+  <meta property="og:site_name" content="OnSpace.AI"/>
+  <!-- No OG image provided — using placeholder -->
+  <meta property="og:image" content="https://cdn-ai.onspace.ai/onspace/project/screenshot/online/pre-site/9bglbl.jpg"/>
+  <meta property="og:image:width" content="1200"/>
+  <meta property="og:image:height" content="630"/>
+  <meta name="twitter:card" content="summary_large_image"/>
+  <meta name="twitter:title" content="ACNH Animalese Generator"/>
+  <meta name="twitter:description" content="Generate perfect Animal Crossing: New Horizons animalese phrases with authentic voice sounds."/>
+  <meta name="twitter:image" content="https://cdn-ai.onspace.ai/onspace/project/screenshot/online/pre-site/9bglbl.jpg"/>
+  <meta name="twitter:url" content="https://www.onspace.ai"/>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""/>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { nunito: ['Nunito', 'sans-serif'] },
+          colors: {
+            acnh: {
+              green:  '#6cbd45', lgreen: '#8ed45f',
+              teal:   '#3abcb1', lteal:  '#5ed4ca',
+              brown:  '#7a4f2d', lbrown: '#c47d45',
+              tan:    '#f5e6cc', ltan:   '#fdf5e6',
+              sky:    '#a8d8f0', yellow: '#f5d36a',
+              pink:   '#f5a0b5', dark:   '#2e5a2e',
+              white:  '#fffef5',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body { font-family: 'Nunito', sans-serif; }
+
+    .grass-bg {
+      background: linear-gradient(180deg, #d4eefd 0%, #c0e8fb 35%, #a8d8f0 100%);
+      min-height: 100vh;
+    }
+    .grass-strip {
+      background: repeating-linear-gradient(90deg,#6cbd45 0px,#6cbd45 18px,#5aaf38 18px,#5aaf38 36px);
+    }
+    .dialog-box {
+      background: #fffef5;
+      border: 4px solid #7a4f2d;
+      border-radius: 20px;
+      box-shadow: 0 6px 0 0 #5a3520, 0 8px 24px rgba(0,0,0,0.15);
+    }
+    .dialog-inner {
+      background: linear-gradient(135deg,#fdf5e6 0%,#fff8ee 100%);
+      border: 2px solid #e8c87e;
+      border-radius: 14px;
+    }
+    .voice-card {
+      background: linear-gradient(135deg,#fffef5 0%,#f5f0e8 100%);
+      border: 3px solid #c47d45;
+      border-radius: 16px;
+      box-shadow: 0 4px 0 0 #9a5d30, 0 6px 12px rgba(0,0,0,0.1);
+      transition: transform 0.12s ease, box-shadow 0.12s ease;
+      cursor: pointer;
+    }
+    .voice-card:hover { transform: translateY(-3px); box-shadow: 0 7px 0 0 #9a5d30, 0 10px 20px rgba(0,0,0,0.15); }
+    .voice-card.selected {
+      background: linear-gradient(135deg,#d4f0b8 0%,#b8e890 100%);
+      border-color: #3d9e2b;
+      box-shadow: 0 4px 0 0 #2a7020, 0 6px 12px rgba(60,158,43,0.25);
+    }
+    .btn-leaf {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 12px 26px; border-radius: 50px;
+      font-weight: 800; font-size: 1rem; border: none; cursor: pointer;
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+    .btn-leaf:active { transform: translateY(3px); }
+    .btn-leaf:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .btn-green  { background: linear-gradient(135deg,#6cbd45,#4ea82e); color:#fff; box-shadow:0 5px 0 0 #357a1d,0 7px 15px rgba(78,168,46,0.3); text-shadow:0 1px 2px rgba(0,0,0,0.2); }
+    .btn-green:hover:not(:disabled)  { background: linear-gradient(135deg,#7dd455,#5dbf3d); }
+    .btn-green:active:not(:disabled) { box-shadow: 0 2px 0 0 #357a1d; }
+    .btn-teal   { background: linear-gradient(135deg,#3abcb1,#2a9c92); color:#fff; box-shadow:0 5px 0 0 #1d6e67,0 7px 15px rgba(58,188,177,0.3); text-shadow:0 1px 2px rgba(0,0,0,0.2); }
+    .btn-teal:hover:not(:disabled)   { background: linear-gradient(135deg,#4ad0c5,#38b0a6); }
+    .btn-teal:active:not(:disabled)  { box-shadow: 0 2px 0 0 #1d6e67; }
+    .btn-brown  { background: linear-gradient(135deg,#c47d45,#a0602e); color:#fff; box-shadow:0 5px 0 0 #6e3f1a,0 7px 15px rgba(160,96,46,0.3); text-shadow:0 1px 2px rgba(0,0,0,0.2); }
+    .btn-brown:hover:not(:disabled)  { background: linear-gradient(135deg,#d98e55,#b8703e); }
+    .btn-brown:active:not(:disabled) { box-shadow: 0 2px 0 0 #6e3f1a; }
+    .acnh-textarea {
+      background: linear-gradient(135deg,#fffff8 0%,#fafaf0 100%);
+      border: 3px solid #c47d45; border-radius: 14px;
+      font-family: 'Nunito', sans-serif; font-size: 1.05rem;
+      color: #3a2510; resize: none; outline: none;
+      transition: border-color 0.2s; box-shadow: inset 0 2px 6px rgba(0,0,0,0.07); line-height: 1.7;
+    }
+    .acnh-textarea:focus { border-color: #6cbd45; }
+
+    @keyframes wave {
+      0%, 100% { height: 6px; }
+      50%       { height: 26px; }
+    }
+    .wave-bar {
+      display: inline-block; width: 4px;
+      background: #6cbd45; border-radius: 4px; margin: 0 2px;
+      animation: wave 0.7s ease-in-out infinite;
+    }
+
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #fdf5e6; border-radius: 8px; }
+    ::-webkit-scrollbar-thumb { background: #c47d45; border-radius: 8px; }
+
+    .char-pill {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 26px; height: 30px; padding: 0 6px;
+      background: #f5e6cc; border: 2px solid #c47d45;
+      border-radius: 8px; font-size: 0.8rem; font-weight: 800;
+      color: #5a3520; transition: background 0.12s, transform 0.12s, color 0.12s;
+    }
+    .char-pill.active {
+      background: #6cbd45; border-color: #3d9e2b; color: white;
+      transform: translateY(-4px) scale(1.18);
+    }
+    .char-pill.space  { background: #e8c87e; border-color: #c4a840; color: #7a5010; }
+    .char-pill.punct  { background: #fdd0db; border-color: #d06080; color: #8a2040; }
+
+    input[type=range] { -webkit-appearance:none; height:8px; background:#e8c87e; border-radius:8px; outline:none; width:100%; }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance:none; width:22px; height:22px;
+      background: linear-gradient(135deg,#6cbd45,#4ea82e);
+      border-radius:50%; cursor:pointer; border:3px solid white;
+      box-shadow:0 2px 4px rgba(0,0,0,0.2);
+    }
+    .section-header {
+      display:flex; align-items:center; gap:10px;
+      font-size:1rem; font-weight:900; color:#5a3520; letter-spacing:0.02em;
+    }
+    .section-header::before {
+      content:''; display:block; width:6px; height:22px;
+      background:linear-gradient(180deg,#6cbd45,#3abcb1);
+      border-radius:4px; flex-shrink:0;
+    }
+    .locale-badge {
+      display:inline-flex; align-items:center; gap:4px; padding:3px 12px;
+      border-radius:20px; font-size:0.72rem; font-weight:800;
+      letter-spacing:0.04em; text-transform:uppercase;
+      cursor:pointer; border:2px solid transparent; transition:all 0.15s;
+    }
+    .locale-badge.active   { background:#6cbd45; color:white; border-color:#3d9e2b; }
+    .locale-badge.inactive { background:#f5e6cc; color:#7a4f2d; border-color:#c47d45; }
+    .locale-badge.inactive:hover { background:#ffe8b0; }
+
+    .voice-tooltip {
+      position:absolute; bottom:calc(100% + 6px); left:50%;
+      transform:translateX(-50%);
+      background:#3a2510; color:#fdf5e6;
+      font-size:0.7rem; font-weight:700; padding:4px 8px;
+      border-radius:8px; white-space:nowrap;
+      pointer-events:none; opacity:0; transition:opacity 0.18s;
+      z-index:10;
+    }
+    .voice-card:hover .voice-tooltip { opacity:1; }
+
+    #progress-bar { transition: width 0.08s linear; }
+
+    /* Status badge */
+    #status-badge {
+      display:none; align-items:center; gap:6px;
+      padding:4px 12px; border-radius:20px;
+      background:rgba(108,189,69,0.15); border:2px solid #6cbd45;
+      font-size:0.78rem; font-weight:800; color:#2e5a2e;
+    }
+  </style>
+</head>
+<body class="grass-bg font-nunito">
+
+  <div class="grass-strip h-5 w-full"></div>
+
+  <!-- Header -->
+  <header class="w-full py-5 px-4 flex flex-col items-center gap-2 relative overflow-hidden">
+    <span class="absolute left-4 top-3 text-3xl opacity-35 rotate-[-20deg] pointer-events-none select-none">🍃</span>
+    <span class="absolute right-6 top-5 text-2xl opacity-30 rotate-[15deg] pointer-events-none select-none">🌿</span>
+    <span class="absolute left-1/4 top-1 text-xl opacity-20 pointer-events-none select-none">🌸</span>
+    <span class="absolute right-1/4 top-2 text-xl opacity-20 pointer-events-none select-none">⭐</span>
+    <div class="flex items-center gap-3">
+      <span class="text-4xl md:text-5xl">🍂</span>
+      <div>
+        <h1 class="text-2xl md:text-3xl font-black text-acnh-dark tracking-tight leading-tight" style="text-shadow:0 2px 0 rgba(255,255,255,0.6);">Animalese Generator</h1>
+        <p class="text-xs md:text-sm font-bold opacity-70" style="color:#7a4f2d;">Animal Crossing: New Horizons · Authentic Voice Synthesis</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="w-full max-w-3xl mx-auto px-3 pb-12 flex flex-col gap-5">
+
+    <!-- Voice selector -->
+    <section class="dialog-box p-4 md:p-5">
+      <div class="section-header mb-3">
+        <i class="fa-solid fa-music" style="color:#6cbd45;"></i>
+        Choose Voice Type
+      </div>
+      <div class="flex items-center gap-2 mb-3 flex-wrap">
+        <span class="text-xs font-bold opacity-60" style="color:#7a4f2d;">Locale:</span>
+        <button class="locale-badge active" id="locale-en" onclick="setLocale(&#39;en&#39;)">🇺🇸 English</button>
+        <button class="locale-badge inactive" id="locale-de" onclick="setLocale(&#39;de&#39;)">🇩🇪 Deutsch</button>
+        <span class="text-xs opacity-50 ml-1" style="color:#7a4f2d;" id="locale-note">EN: letters F G J N R Z use authentic per-letter samples</span>
+      </div>
+      <div class="grid grid-cols-3 sm:grid-cols-5 gap-2" id="voice-grid"></div>
+    </section>
+
+    <!-- Text input -->
+    <section class="dialog-box p-4 md:p-5">
+      <div class="section-header mb-3">
+        <i class="fa-solid fa-keyboard" style="color:#3abcb1;"></i>
+        Type Your Message
+      </div>
+      <textarea id="text-input" class="acnh-textarea w-full p-3 h-24" placeholder="Type something… e.g. Hello there!" maxlength="200"></textarea>
+      <div class="flex justify-between items-center mt-1">
+        <span class="text-xs font-bold opacity-50" style="color:#7a4f2d;" id="char-count">0 / 200</span>
+        <button onclick="clearText()" class="text-xs font-bold opacity-60 hover:opacity-100 transition-opacity flex items-center gap-1" style="color:#7a4f2d; background:none; border:none; cursor:pointer;">
+          <i class="fa-solid fa-xmark"></i> Clear
+        </button>
+      </div>
+      <!-- Syllable preview -->
+      <div id="char-preview-wrap" class="mt-3 p-3 dialog-inner rounded-xl" style="display:none;">
+        <div class="text-xs font-bold opacity-55 mb-2" style="color:#7a4f2d;">Syllable preview:</div>
+        <div id="char-preview" class="flex flex-wrap gap-1 items-end min-h-[36px]"></div>
+      </div>
+    </section>
+
+    <!-- Playback controls -->
+    <section class="dialog-box p-4 md:p-5">
+      <div class="section-header mb-4">
+        <i class="fa-solid fa-sliders" style="color:#c47d45;"></i>
+        Playback Settings
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
+        <div>
+          <label class="text-xs font-bold flex justify-between mb-2" style="color:#7a4f2d;">
+            <span><i class="fa-solid fa-gauge-high mr-1"></i>Speed</span>
+            <span id="speed-val" class="font-black" style="color:#6cbd45;">1.00×</span>
+          </label>
+          <input type="range" id="speed-slider" min="0.4" max="2.5" step="0.05" value="1.0" oninput="document.getElementById(&#39;speed-val&#39;).textContent=parseFloat(this.value).toFixed(2)+&#39;×&#39;"/>
+        </div>
+        <div>
+          <label class="text-xs font-bold flex justify-between mb-2" style="color:#7a4f2d;">
+            <span><i class="fa-solid fa-wave-square mr-1"></i>Pitch</span>
+            <span id="pitch-val" class="font-black" style="color:#3abcb1;">1.00×</span>
+          </label>
+          <input type="range" id="pitch-slider" min="0.5" max="2.0" step="0.05" value="1.0" oninput="document.getElementById(&#39;pitch-val&#39;).textContent=parseFloat(this.value).toFixed(2)+&#39;×&#39;"/>
+        </div>
+      </div>
+      <div class="mb-5">
+        <label class="text-xs font-bold flex justify-between mb-2" style="color:#7a4f2d;">
+          <span><i class="fa-solid fa-clock mr-1"></i>Gap between syllables</span>
+          <span id="gap-val" class="font-black" style="color:#b08020;">30 ms</span>
+        </label>
+        <input type="range" id="gap-slider" min="0" max="200" step="5" value="30" oninput="document.getElementById(&#39;gap-val&#39;).textContent=this.value+&#39; ms&#39;"/>
+      </div>
+
+      <!-- Action buttons -->
+      <div class="flex flex-wrap gap-3 items-center">
+        <button id="play-btn" class="btn-leaf btn-green" onclick="playSpeech()">
+          <i class="fa-solid fa-play"></i> Speak!
+        </button>
+        <button id="stop-btn" class="btn-leaf btn-brown" onclick="stopSpeech()" style="display:none;">
+          <i class="fa-solid fa-stop"></i> Stop
+        </button>
+        <button id="dl-btn" class="btn-leaf btn-teal" onclick="downloadAudio()">
+          <i class="fa-solid fa-download"></i> Export WAV
+        </button>
+        <!-- Status / wave indicator -->
+        <div id="status-badge">
+          <span class="wave-bar" style="animation-delay:0s"></span>
+          <span class="wave-bar" style="animation-delay:0.1s"></span>
+          <span class="wave-bar" style="animation-delay:0.2s"></span>
+          <span class="wave-bar" style="animation-delay:0.3s"></span>
+          <span id="status-text">Playing…</span>
+        </div>
+      </div>
+
+      <!-- Progress bar -->
+      <div id="progress-wrap" class="mt-4 rounded-full h-3 overflow-hidden border" style="display:none; background:#f5e6cc; border-color:#c4a840;">
+        <div id="progress-bar" class="h-3 rounded-full" style="width:0%; background:linear-gradient(90deg,#6cbd45,#3abcb1);"></div>
+      </div>
+    </section>
+
+    <!-- Now-speaking display -->
+    <section id="speaking-section" class="dialog-box p-4 md:p-5" style="display:none;">
+      <div class="section-header mb-3">
+        <i class="fa-solid fa-comment" style="color:#f5a0b5;"></i>
+        Now Speaking
+      </div>
+      <div class="dialog-inner p-3 rounded-xl">
+        <div id="speaking-display" class="flex flex-wrap gap-1 items-end min-h-[36px]"></div>
+      </div>
+    </section>
+
+    <!-- About -->
+    <section class="dialog-box p-4">
+      <details>
+        <summary class="section-header cursor-pointer select-none">
+          <i class="fa-solid fa-circle-info" style="color:#5ab0d8;"></i>
+          About &amp; How It Works
+        </summary>
+        <div class="mt-3 text-sm leading-relaxed space-y-2 opacity-90" style="color:#7a4f2d;">
+          <p><strong>Voice folders</strong> represent ACNH personality types — each has a unique tone. Audio is streamed live from
+            <a href="https://github.com/RedrumRettan/perfect_acnh_animalese_generator" target="_blank" class="underline" style="color:#3abcb1;">the GitHub repo</a>.</p>
+          <p><strong>How text converts:</strong> Each letter maps to a KanaEx syllable (vowel-chain phonetics).
+             When locale = English/Deutsch and the voice is <em>Bonyari</em>, letters with dedicated swkbd samples (F G J N R Z in EN; J Y in DE) use the real per-letter pronunciations.</p>
+          <p><strong>Export WAV</strong> stitches samples via Web Audio OfflineAudioContext into one downloadable file.</p>
+          <div class="mt-2 p-2 rounded-lg text-xs" style="background:#f5e6cc; border:1px solid #c47d45;">
+            <strong>Voices:</strong> aneki (older sister) · bonyari (airhead) · futsu (normal) · genki (peppy) ·
+            ghost (spooky) · hakihaki (jock) · kiza (snooty) · kowai (cranky) · otona (smug)
+          </div>
+        </div>
+      </details>
+    </section>
+  </main>
+
+  <div class="grass-strip h-6 w-full mt-2"></div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+/* ============================================================
+   CONSTANTS
+============================================================ */
+const BASE = 'https://raw.githubusercontent.com/RedrumRettan/perfect_acnh_animalese_generator/main/acnh_talking_sounds';
+
+const VOICE_TYPES = [
+  { id:'aneki',    label:'Aneki',     emoji:'👧', desc:'Older Sister — bright & bubbly' },
+  { id:'bonyari',  label:'Bonyari',   emoji:'😶', desc:'Airhead — slow & dreamy' },
+  { id:'futsu',    label:'Futsu',     emoji:'😊', desc:'Normal — balanced & friendly' },
+  { id:'genki',    label:'Genki',     emoji:'⚡', desc:'Peppy — energetic & fast' },
+  { id:'ghost',    label:'Ghost',     emoji:'👻', desc:'Spooky — eerie & hollow' },
+  { id:'hakihaki', label:'Haki-Haki', emoji:'💪', desc:'Jock — bold & loud' },
+  { id:'kiza',     label:'Kiza',      emoji:'💅', desc:'Snooty — refined & sharp' },
+  { id:'kowai',    label:'Kowai',     emoji:'😤', desc:'Cranky — gruff & deep' },
+  { id:'otona',    label:'Otona',     emoji:'🧐', desc:'Smug — suave & smooth' },
+];
+
+// Capitalized names as used in filenames
+const VOICE_FILE = {
+  aneki:'Aneki', bonyari:'Bonyari', futsu:'Futsu',
+  genki:'Genki', ghost:'Ghost', hakihaki:'Hakihaki',
+  kiza:'Kiza', kowai:'Kowai', otona:'Otona',
+};
+
+/* ============================================================
+   KANA PHONEME SYSTEM
+   KanaEx file names follow: VOWEL + (VOWEL | h+V | w+V | y+V | n)
+   ALL syllables confirmed from repo listing.
+============================================================ */
+
+// Full confirmed syllable set (vowel-only structure)
+const KANA_SYLLABLES = new Set([
+  'aa','ae','ai','ao','au','an',
+  'aha','ahe','ahi','aho','ahu',
+  'awa','awe','awi','awo',
+  'aya','aye','ayo','ayu',
+  'ea','ee','ei','eo','eu','en',
+  'eha','ehe','ehi','eho','ehu',
+  'ewa','ewe','ewi','ewo',
+  'ia','ie','ii','io','iu','in',
+  'iha','ihe','ihi','iho','ihu',
+  'iwa','iwe','iwi','iwo',
+  'oa','oe','oi','oo','ou','on',
+  'oha','ohe','ohi','oho','ohu',
+  'owa','owe','owi','owo',
+  'oya','oye','oyo','oyu',
+  'ua','ue','ui','uo','uu','un',
+  'uha','uhe','uhi','uho','uhu',
+  'uwa','uwe','uwi','uwo',
+]);
+
+// English letter → best-matching confirmed KanaEx syllable
+// Strategy: map consonant sounds to phonetically close vowel chains
+const LETTER_MAP = {
+  A:'aa', B:'uu',  C:'ii',  D:'uu',  E:'ee',
+  F:'ehu',G:'uu',  H:'eha', I:'ii',  J:'uu',
+  K:'uwa',L:'eu',  M:'on',  N:'an',  O:'oo',
+  P:'uu', Q:'uwa', R:'eu',  S:'ii',  T:'ii',
+  U:'uu', V:'uu',  W:'uwa', X:'eu',  Y:'aya',
+  Z:'uha',
+  // Digits
+  '0':'oo','1':'an','2':'eu','3':'oo','4':'aya',
+  '5':'uha','6':'uwa','7':'awa','8':'ahe','9':'un',
+};
+
+// swkbd files: only exist for BONYARI voice
+// swkbd_en: letters F G J N R Z  | digits 2 3 5 6 7 8 9
+// swkbd_de: letters J Y           | digits 0-9
+const SWKBD_EN_LETTERS = new Set(['F','G','J','N','R','Z']);
+const SWKBD_DE_LETTERS = new Set(['J','Y']);
+const SWKBD_EN_DIGITS  = new Set(['2','3','5','6','7','8','9']);
+const SWKBD_DE_DIGITS  = new Set(['0','1','2','3','4','5','6','7','8','9']);
+
+/* ============================================================
+   STATE
+============================================================ */
+let selectedVoice = 'futsu';
+let currentLocale = 'en';
+let isPlaying     = false;
+let stopRequested = false;
+let audioCtx      = null;
+const audioCache  = {};   // url → AudioBuffer
+
+/* ============================================================
+   BUILD UI
+============================================================ */
+function buildVoiceGrid() {
+  const grid = document.getElementById('voice-grid');
+  grid.innerHTML = '';
+  VOICE_TYPES.forEach(v => {
+    const card = document.createElement('div');
+    card.className = `voice-card p-2 flex flex-col items-center gap-1 relative ${v.id === selectedVoice ? 'selected' : ''}`;
+    card.id = `vc-${v.id}`;
+    card.onclick = () => selectVoice(v.id);
+    card.innerHTML = `
+      <div class="voice-tooltip">${v.desc}</div>
+      <span class="text-2xl">${v.emoji}</span>
+      <span class="text-xs font-black text-center leading-tight" style="color:#3a2510;">${v.label}</span>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function selectVoice(id) {
+  selectedVoice = id;
+  document.querySelectorAll('.voice-card').forEach(c => c.classList.remove('selected'));
+  const card = document.getElementById(`vc-${id}`);
+  if (card) card.classList.add('selected');
+  updatePreview();
+}
+
+function setLocale(loc) {
+  currentLocale = loc;
+  document.getElementById('locale-en').className = `locale-badge ${loc==='en'?'active':'inactive'}`;
+  document.getElementById('locale-de').className = `locale-badge ${loc==='de'?'active':'inactive'}`;
+  const note = document.getElementById('locale-note');
+  if (loc === 'en') note.textContent = 'EN: letters F G J N R Z use authentic per-letter samples (Bonyari only)';
+  else               note.textContent = 'DE: letters J Y + digits 0–9 use authentic samples (Bonyari only)';
+  updatePreview();
+}
+
+/* ============================================================
+   TEXT INPUT
+============================================================ */
+const textInput = document.getElementById('text-input');
+textInput.addEventListener('input', () => {
+  document.getElementById('char-count').textContent = `${textInput.value.length} / 200`;
+  updatePreview();
+});
+
+function clearText() {
+  textInput.value = '';
+  document.getElementById('char-count').textContent = '0 / 200';
+  document.getElementById('char-preview-wrap').style.display = 'none';
+}
+window.clearText = clearText;
+
+/* ============================================================
+   TOKEN RESOLUTION
+   Each character → { label, url, isSpace, isPunct }
+============================================================ */
+function resolveToken(ch) {
+  const upper = ch.toUpperCase();
+
+  // Whitespace → pause
+  if (/[\s\n\t]/.test(ch)) return { label:'·', url:null, isSpace:true };
+
+  // Period → dedicated dot sound
+  if (ch === '.' || ch === '…') {
+    return { label:'.', url:`${BASE}/others/Voice_Dot.wav`, isPunct:true };
+  }
+
+  // Other punctuation → short pause
+  if (/[,;:!?'"()\-–—\/\\]/.test(ch)) {
+    return { label:ch, url:null, isSpace:true, isPunct:true };
+  }
+
+  // Digit
+  if (/[0-9]/.test(ch)) {
+    // swkbd only for bonyari
+    if (selectedVoice === 'bonyari') {
+      const hasSwkbd = currentLocale === 'de' ? SWKBD_DE_DIGITS.has(ch) : SWKBD_EN_DIGITS.has(ch);
+      if (hasSwkbd) {
+        const folder  = currentLocale === 'de' ? 'swkbd_de' : 'swkbd_en';
+        const langTag = currentLocale === 'de' ? 'Ger' : 'Eng';
+        return { label:ch, url:`${BASE}/${folder}/Voice_Swkbd_Bonyari_Digit_${langTag}_${ch}.wav` };
+      }
+    }
+    const syl = LETTER_MAP[ch] || 'aa';
+    return { label:ch, url:kanaUrl(syl) };
+  }
+
+  // Letter A–Z
+  if (/[A-Za-z]/.test(ch)) {
+    // swkbd only for bonyari
+    if (selectedVoice === 'bonyari') {
+      const hasSwkbd = currentLocale === 'de' ? SWKBD_DE_LETTERS.has(upper) : SWKBD_EN_LETTERS.has(upper);
+      if (hasSwkbd) {
+        const folder  = currentLocale === 'de' ? 'swkbd_de' : 'swkbd_en';
+        const langTag = currentLocale === 'de' ? 'Ger' : 'Eng';
+        return { label:ch, url:`${BASE}/${folder}/Voice_Swkbd_Bonyari_Alph_${langTag}_${upper}.wav` };
+      }
+    }
+    const syl = LETTER_MAP[upper] || 'aa';
+    return { label:ch, url:kanaUrl(syl) };
+  }
+
+  // Unknown → skip
+  return { label:ch, url:null, isSpace:true };
+}
+
+function kanaUrl(syllable) {
+  // Validate syllable exists; fall back to 'aa' if not
+  const syl = KANA_SYLLABLES.has(syllable) ? syllable : 'aa';
+  const vName = VOICE_FILE[selectedVoice] || 'Futsu';
+  return `${BASE}/${selectedVoice}/Voice_${vName}_KanaEx_${syl}.wav`;
+}
+
+function buildTokens(text) {
+  return [...text].map(ch => resolveToken(ch));
+}
+
+/* ============================================================
+   PREVIEW PILLS
+============================================================ */
+function updatePreview() {
+  const text = textInput.value;
+  const wrap = document.getElementById('char-preview-wrap');
+  const el   = document.getElementById('char-preview');
+  if (!text.trim()) { wrap.style.display='none'; return; }
+  wrap.style.display = 'block';
+  const tokens = buildTokens(text);
+  el.innerHTML = '';
+  tokens.forEach((tok, i) => {
+    const pill = document.createElement('span');
+    pill.className = `char-pill ${tok.isSpace?'space':''} ${tok.isPunct?'punct':''}`;
+    pill.dataset.idx = i;
+    pill.textContent = tok.label;
+    el.appendChild(pill);
+  });
+}
+
+/* ============================================================
+   AUDIO ENGINE
+============================================================ */
+function getAudioCtx() {
+  if (!audioCtx || audioCtx.state === 'closed') {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+async function loadBuffer(url) {
+  if (audioCache[url]) return audioCache[url];
+  try {
+    const resp = await fetch(url);
+    if (!resp.ok) return null;
+    const ab  = await resp.arrayBuffer();
+    const ctx = getAudioCtx();
+    const buf = await ctx.decodeAudioData(ab);
+    audioCache[url] = buf;
+    return buf;
+  } catch(e) { return null; }
+}
+
+/* Play a single buffer, returns a Promise that resolves when done */
+function playOnce(ctx, buffer, playbackRate, pitchDetune) {
+  return new Promise(resolve => {
+    const src = ctx.createBufferSource();
+    src.buffer       = buffer;
+    src.playbackRate.value = playbackRate;
+    src.detune.value = pitchDetune;
+    src.connect(ctx.destination);
+    src.onended = () => resolve();
+    src.start(0);
+  });
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+/* ============================================================
+   PLAY SPEECH  (sequential, frame-accurate highlighting)
+============================================================ */
+async function playSpeech() {
+  const text = textInput.value.trim();
+  if (!text || isPlaying) return;
+
+  const tokens = buildTokens(text);
+  const soundTokens = tokens.filter(t => t.url);
+  if (!soundTokens.length) return;
+
+  setPlayingUI(true);
+
+  // Build speaking display
+  buildSpeakingDisplay(tokens);
+  document.getElementById('speaking-section').style.display = 'block';
+
+  const speed    = parseFloat(document.getElementById('speed-slider').value);
+  const pitch    = parseFloat(document.getElementById('pitch-slider').value);
+  const gapMs    = parseInt(document.getElementById('gap-slider').value);
+  const detune   = Math.round((Math.log2(pitch)) * 1200); // semitones in cents
+
+  const progressBar  = document.getElementById('progress-bar');
+  const progressWrap = document.getElementById('progress-wrap');
+  progressWrap.style.display = 'block';
+
+  const totalSound = soundTokens.length;
+  let doneCount = 0;
+
+  // Pre-fetch all buffers concurrently
+  const bufMap = {};
+  await Promise.all(soundTokens.map(async tok => {
+    bufMap[tok.url] = await loadBuffer(tok.url);
+  }));
+
+  if (stopRequested) { finishPlaying(); return; }
+
+  // Sequential playback
+  const speakPills = document.querySelectorAll('#speaking-display .char-pill');
+
+  for (let i = 0; i < tokens.length; i++) {
+    if (stopRequested) break;
+
+    const tok = tokens[i];
+
+    // Highlight current pill
+    speakPills.forEach((p, pi) => p.classList.toggle('active', pi === i));
+
+    if (tok.isSpace) {
+      await sleep(Math.round(120 / speed));
+      continue;
+    }
+    if (!tok.url) continue;
+
+    const buf = bufMap[tok.url];
+    if (!buf) {
+      // Missing sample — tiny silence
+      await sleep(60);
+      continue;
+    }
+
+    const ctx = getAudioCtx();
+    await playOnce(ctx, buf, speed, detune);
+
+    doneCount++;
+    progressBar.style.width = `${(doneCount / totalSound) * 100}%`;
+
+    if (gapMs > 0 && !stopRequested) await sleep(gapMs);
+  }
+
+  speakPills.forEach(p => p.classList.remove('active'));
+  finishPlaying();
+}
+window.playSpeech = playSpeech;
+
+function stopSpeech() {
+  stopRequested = true;
+  // Close and re-create context to cut audio immediately
+  if (audioCtx) {
+    try { audioCtx.close(); } catch(e) {}
+    audioCtx = null;
+  }
+  finishPlaying();
+}
+window.stopSpeech = stopSpeech;
+
+function finishPlaying() {
+  isPlaying     = false;
+  stopRequested = false;
+  setPlayingUI(false);
+}
+
+function setPlayingUI(playing) {
+  isPlaying = playing;
+  document.getElementById('play-btn').style.display  = playing ? 'none' : '';
+  document.getElementById('stop-btn').style.display  = playing ? ''     : 'none';
+  document.getElementById('status-badge').style.display = playing ? 'flex' : 'none';
+  if (!playing) {
+    document.getElementById('progress-bar').style.width = '0%';
+    document.getElementById('progress-wrap').style.display = 'none';
+    document.querySelectorAll('.char-pill.active').forEach(p => p.classList.remove('active'));
+  }
+}
+
+function buildSpeakingDisplay(tokens) {
+  const el = document.getElementById('speaking-display');
+  el.innerHTML = '';
+  tokens.forEach((tok, i) => {
+    const pill = document.createElement('span');
+    pill.className = `char-pill ${tok.isSpace?'space':''} ${tok.isPunct?'punct':''}`;
+    pill.dataset.idx = i;
+    pill.textContent = tok.label;
+    el.appendChild(pill);
+  });
+}
+
+/* ============================================================
+   EXPORT WAV
+============================================================ */
+async function downloadAudio() {
+  const text = textInput.value.trim();
+  if (!text) { alert('Please type some text first!'); return; }
+
+  const tokens = buildTokens(text);
+  const soundTokens = tokens.filter(t => t.url);
+  if (!soundTokens.length) { alert('No sounds to export.'); return; }
+
+  const dlBtn = document.getElementById('dl-btn');
+  dlBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Rendering…';
+  dlBtn.disabled = true;
+
+  const speed  = parseFloat(document.getElementById('speed-slider').value);
+  const pitch  = parseFloat(document.getElementById('pitch-slider').value);
+  const gapMs  = parseInt(document.getElementById('gap-slider').value);
+  const detune = Math.round((Math.log2(pitch)) * 1200);
+
+  // Fetch all buffers
+  const bufMap = {};
+  await Promise.all(soundTokens.map(async tok => {
+    bufMap[tok.url] = await loadBuffer(tok.url);
+  }));
+
+  const SR = 44100;
+  const SPACE_SAMPS = Math.round((120 / speed) * SR / 1000);
+  const GAP_SAMPS   = Math.round((gapMs * SR) / 1000);
+
+  // Calculate total length
+  let totalSamps = 0;
+  for (const tok of tokens) {
+    if (tok.isSpace) { totalSamps += SPACE_SAMPS; continue; }
+    if (!tok.url) continue;
+    const buf = bufMap[tok.url];
+    if (!buf) { totalSamps += Math.round(SR * 0.06); continue; }
+    totalSamps += Math.round(buf.length / speed) + GAP_SAMPS;
+  }
+
+  if (totalSamps <= 0) {
+    dlBtn.innerHTML = '<i class="fa-solid fa-download"></i> Export WAV';
+    dlBtn.disabled = false;
+    return;
+  }
+
+  // Offline render
+  const offCtx = new OfflineAudioContext(1, totalSamps, SR);
+  let cursorSec = 0;
+
+  for (const tok of tokens) {
+    if (tok.isSpace) { cursorSec += SPACE_SAMPS / SR; continue; }
+    if (!tok.url) continue;
+    const buf = bufMap[tok.url];
+    if (!buf) { cursorSec += 0.06; continue; }
+
+    // Resample to 44100 if needed
+    let srcBuf = buf;
+    if (buf.sampleRate !== SR) {
+      try {
+        const mini = new OfflineAudioContext(
+          buf.numberOfChannels,
+          Math.round(buf.duration * SR),
+          SR
+        );
+        const s = mini.createBufferSource();
+        s.buffer = buf;
+        s.connect(mini.destination);
+        s.start(0);
+        srcBuf = await mini.startRendering();
+      } catch(e) { srcBuf = buf; }
+    }
+
+    const src = offCtx.createBufferSource();
+    src.buffer = srcBuf;
+    src.playbackRate.value = speed;
+    src.detune.value = detune;
+    src.connect(offCtx.destination);
+    src.start(cursorSec);
+
+    cursorSec += (srcBuf.length / speed) / SR + GAP_SAMPS / SR;
+  }
+
+  let rendered;
+  try {
+    rendered = await offCtx.startRendering();
+  } catch(e) {
+    alert('Render failed: ' + e.message);
+    dlBtn.innerHTML = '<i class="fa-solid fa-download"></i> Export WAV';
+    dlBtn.disabled = false;
+    return;
+  }
+
+  const blob = encodeWav(rendered);
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url;
+  a.download = `animalese_${selectedVoice}_${Date.now()}.wav`;
+  a.click();
+  URL.revokeObjectURL(url);
+
+  dlBtn.innerHTML = '<i class="fa-solid fa-download"></i> Export WAV';
+  dlBtn.disabled = false;
+}
+window.downloadAudio = downloadAudio;
+
+function encodeWav(buffer) {
+  const SR   = buffer.sampleRate;
+  const data = buffer.getChannelData(0);
+  const len  = data.length;
+  const ab   = new ArrayBuffer(44 + len * 2);
+  const v    = new DataView(ab);
+  const ws   = (off, s) => { for (let i=0;i<s.length;i++) v.setUint8(off+i, s.charCodeAt(i)); };
+  ws(0,'RIFF'); v.setUint32(4,36+len*2,true);
+  ws(8,'WAVE'); ws(12,'fmt ');
+  v.setUint32(16,16,true); v.setUint16(20,1,true); v.setUint16(22,1,true);
+  v.setUint32(24,SR,true); v.setUint32(28,SR*2,true);
+  v.setUint16(32,2,true);  v.setUint16(34,16,true);
+  ws(36,'data'); v.setUint32(40,len*2,true);
+  let o = 44;
+  for (let i=0;i<len;i++) {
+    const s = Math.max(-1,Math.min(1,data[i]));
+    v.setInt16(o, s<0 ? s*0x8000 : s*0x7FFF, true);
+    o += 2;
+  }
+  return new Blob([ab],{type:'audio/wav'});
+}
+
+/* ============================================================
+   INIT
+============================================================ */
+buildVoiceGrid();
+
+// Make global functions accessible
+window.setLocale    = setLocale;
+window.selectVoice  = selectVoice;
+
+}); // DOMContentLoaded
+</script>
+
+
+</body></html>
