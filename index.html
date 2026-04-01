@@ -665,17 +665,17 @@ async function loadBuffer(url) {
   } catch(e) { return null; }
 }
 
-/* Play a single buffer, returns a Promise that resolves when done */
-function playOnce(ctx, buffer, playbackRate, pitchDetune) {
-  return new Promise(resolve => {
-    const src = ctx.createBufferSource();
-    src.buffer       = buffer;
-    src.playbackRate.value = playbackRate;
-    src.detune.value = pitchDetune;
-    src.connect(ctx.destination);
-    src.onended = () => resolve();
-    src.start(0);
-  });
+/* Start a single buffer and return its end-promise + duration */
+function startOnce(ctx, buffer, playbackRate, pitchDetune) {
+  const src = ctx.createBufferSource();
+  src.buffer = buffer;
+  src.playbackRate.value = playbackRate;
+  src.detune.value = pitchDetune;
+  src.connect(ctx.destination);
+  const ended = new Promise(resolve => { src.onended = () => resolve(); });
+  src.start(0);
+  const durationMs = (buffer.duration / playbackRate) * 1000;
+  return { ended, durationMs };
 }
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
@@ -720,6 +720,7 @@ async function playSpeech() {
   // Sequential playback
   const speakPills = document.querySelectorAll('#speaking-display .char-pill');
 
+  let lastEndedPromise = null;
   for (let i = 0; i < tokens.length; i++) {
     if (stopRequested) break;
 
@@ -742,14 +743,18 @@ async function playSpeech() {
     }
 
     const ctx = getAudioCtx();
-    await playOnce(ctx, buf, speed, detune);
+    const playback = startOnce(ctx, buf, speed, detune);
+    lastEndedPromise = playback.ended;
 
     doneCount++;
     progressBar.style.width = `${(doneCount / totalSound) * 100}%`;
 
-    if (gapMs > 0 && !stopRequested) await sleep(gapMs);
+    if (stopRequested) break;
+    const intervalMs = Math.max(0, playback.durationMs + gapMs);
+    if (intervalMs > 0) await sleep(intervalMs);
   }
 
+  if (!stopRequested && lastEndedPromise) await lastEndedPromise;
   speakPills.forEach(p => p.classList.remove('active'));
   finishPlaying();
 }
