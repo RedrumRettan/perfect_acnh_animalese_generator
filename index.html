@@ -337,7 +337,11 @@ document.addEventListener('DOMContentLoaded', () => {
 /* ============================================================
    CONSTANTS
 ============================================================ */
-const BASE = './acnh_talking_sounds';
+const pagePath = window.location.pathname;
+const pageDir = pagePath.endsWith('/')
+  ? pagePath
+  : (pagePath.includes('.') ? pagePath.slice(0, pagePath.lastIndexOf('/') + 1) : `${pagePath}/`);
+const BASE = `${window.location.origin}${pageDir}acnh_talking_sounds`;
 
 const VOICE_TYPES = [
   { id:'aneki',    label:'Aneki',     emoji:'👧', desc:'Older Sister — bright & bubbly' },
