@@ -251,14 +251,20 @@
             <span><i class="fa-solid fa-gauge-high mr-1"></i>Speed</span>
             <span id="speed-val" class="font-black" style="color:#6cbd45;">1.00×</span>
           </label>
-          <input type="range" id="speed-slider" min="0.4" max="2.5" step="0.05" value="1.0" oninput="document.getElementById(&#39;speed-val&#39;).textContent=parseFloat(this.value).toFixed(2)+&#39;×&#39;"/>
+          <div class="flex items-center gap-2">
+            <input type="range" id="speed-slider" min="0.4" max="2.5" step="0.05" value="1.0" class="flex-1"/>
+            <input type="number" id="speed-input" min="0.4" max="2.5" step="0.05" value="1.0" class="w-20 px-2 py-1 rounded border text-xs font-bold" style="border-color:#c47d45; color:#7a4f2d;"/>
+          </div>
         </div>
         <div>
           <label class="text-xs font-bold flex justify-between mb-2" style="color:#7a4f2d;">
             <span><i class="fa-solid fa-wave-square mr-1"></i>Pitch</span>
             <span id="pitch-val" class="font-black" style="color:#3abcb1;">1.00×</span>
           </label>
-          <input type="range" id="pitch-slider" min="0.5" max="2.0" step="0.05" value="1.0" oninput="document.getElementById(&#39;pitch-val&#39;).textContent=parseFloat(this.value).toFixed(2)+&#39;×&#39;"/>
+          <div class="flex items-center gap-2">
+            <input type="range" id="pitch-slider" min="0.5" max="2.0" step="0.05" value="1.0" class="flex-1"/>
+            <input type="number" id="pitch-input" min="0.5" max="2.0" step="0.05" value="1.0" class="w-20 px-2 py-1 rounded border text-xs font-bold" style="border-color:#3abcb1; color:#2f8d86;"/>
+          </div>
         </div>
       </div>
       <div class="mb-5">
@@ -266,7 +272,10 @@
           <span><i class="fa-solid fa-clock mr-1"></i>Gap between syllables</span>
           <span id="gap-val" class="font-black" style="color:#b08020;">30 ms</span>
         </label>
-        <input type="range" id="gap-slider" min="0" max="200" step="5" value="30" oninput="document.getElementById(&#39;gap-val&#39;).textContent=this.value+&#39; ms&#39;"/>
+        <div class="flex items-center gap-2">
+          <input type="range" id="gap-slider" min="-200" max="200" step="5" value="30" class="flex-1"/>
+          <input type="number" id="gap-input" min="-200" max="200" step="5" value="30" class="w-20 px-2 py-1 rounded border text-xs font-bold" style="border-color:#b08020; color:#7a4f2d;"/>
+        </div>
       </div>
 
       <!-- Action buttons -->
@@ -315,11 +324,11 @@
           About &amp; How It Works
         </summary>
         <div class="mt-3 text-sm leading-relaxed space-y-2 opacity-90" style="color:#7a4f2d;">
-          <p><strong>Voice folders</strong> represent ACNH personality types — each has a unique tone. Audio is streamed live from
-            <a href="https://github.com/RedrumRettan/perfect_acnh_animalese_generator" target="_blank" class="underline" style="color:#3abcb1;">the GitHub repo</a>.</p>
-          <p><strong>How text converts:</strong> Each letter maps to a KanaEx syllable (vowel-chain phonetics).
-             When locale = English/Deutsch and the voice is <em>Bonyari</em>, letters with dedicated swkbd samples (F G J N R Z in EN; J Y in DE) use the real per-letter pronunciations.</p>
-          <p><strong>Export WAV</strong> stitches samples via Web Audio OfflineAudioContext into one downloadable file.</p>
+          <p><strong>Voice folders</strong> represent ACNH personality types — each has a unique tone. All audio is loaded from this app’s local <code>acnh_talking_sounds</code> files.</p>
+          <p><strong>How text converts:</strong> Valid multi-letter kana combinations (for example <em>ba</em>, <em>hyo</em>, <em>iyu</em>) are grouped into one token and use the matching clip. The tokenizer prefers longer matches first and can skip silent vowel+<em>h</em> patterns (like <em>oh</em> → <em>o</em>).</p>
+          <p><strong>Localization:</strong> For EN/DE, available <em>swkbd</em> letter/digit clips are used automatically for the selected voice, then fallback mapping is used when a localized clip is missing.</p>
+          <p><strong>Timing controls:</strong> Speed, pitch, gap (including negative values), and punctuation pause are all customizable. Punctuation pause is applied only for <em>, . ! ?</em> when followed by a space.</p>
+          <p><strong>Export WAV</strong> renders the same token/timing behavior into one downloadable file via Web Audio OfflineAudioContext.</p>
           <div class="mt-2 p-2 rounded-lg text-xs" style="background:#f5e6cc; border:1px solid #c47d45;">
             <strong>Voices:</strong> aneki (older sister) · bonyari (airhead) · futsu (normal) · genki (peppy) ·
             ghost (spooky) · hakihaki (jock) · kiza (snooty) · kowai (cranky) · otona (smug)
@@ -337,7 +346,11 @@ document.addEventListener('DOMContentLoaded', () => {
 /* ============================================================
    CONSTANTS
 ============================================================ */
-const BASE = 'https://raw.githubusercontent.com/RedrumRettan/perfect_acnh_animalese_generator/main/acnh_talking_sounds';
+const pagePath = window.location.pathname;
+const pageDir = pagePath.endsWith('/')
+  ? pagePath
+  : (pagePath.includes('.') ? pagePath.slice(0, pagePath.lastIndexOf('/') + 1) : `${pagePath}/`);
+const BASE = `${window.location.origin}${pageDir}acnh_talking_sounds`;
 
 const VOICE_TYPES = [
   { id:'aneki',    label:'Aneki',     emoji:'👧', desc:'Older Sister — bright & bubbly' },
@@ -364,26 +377,34 @@ const VOICE_FILE = {
    ALL syllables confirmed from repo listing.
 ============================================================ */
 
-// Full confirmed syllable set (vowel-only structure)
 const KANA_SYLLABLES = new Set([
-  'aa','ae','ai','ao','au','an',
-  'aha','ahe','ahi','aho','ahu',
-  'awa','awe','awi','awo',
-  'aya','aye','ayo','ayu',
-  'ea','ee','ei','eo','eu','en',
-  'eha','ehe','ehi','eho','ehu',
-  'ewa','ewe','ewi','ewo',
-  'ia','ie','ii','io','iu','in',
-  'iha','ihe','ihi','iho','ihu',
-  'iwa','iwe','iwi','iwo',
-  'oa','oe','oi','oo','ou','on',
-  'oha','ohe','ohi','oho','ohu',
-  'owa','owe','owi','owo',
-  'oya','oye','oyo','oyu',
-  'ua','ue','ui','uo','uu','un',
-  'uha','uhe','uhi','uho','uhu',
-  'uwa','uwe','uwi','uwo',
+  'a', 'ba', 'be', 'bi', 'bo', 'bu', 'bya', 'bye', 'byo', 'byu', 'cha', 'che', 'chi', 'cho', 'chu', 'da', 'de', 'di', 'do', 'du', 'dyu', 'e', 'fa', 'fe', 'fi', 'fo', 'fyo', 'fyu', 'ga', 'ge', 'gi', 'go', 'gu', 'gwa', 'gwe', 'gwi', 'gwo', 'gya', 'gye', 'gyo', 'gyu', 'ha', 'he', 'hi', 'ho', 'hu', 'hya', 'hye', 'hyo', 'hyu', 'i', 'ja', 'je', 'jo', 'ju', 'ka', 'ke', 'ki', 'ko', 'ku', 'kwa', 'kwe', 'kwi', 'kwo', 'kya', 'kye', 'kyo', 'kyu', 'ma', 'me', 'mi', 'mo', 'mu', 'mya', 'mye', 'myo', 'myu', 'n', 'na', 'ne', 'ni', 'no', 'nu', 'nya', 'nye', 'nyo', 'nyu', 'o', 'pa', 'pe', 'pi', 'po', 'pu', 'pya', 'pye', 'pyo', 'pyu', 'ra', 're', 'ri', 'ro', 'ru', 'rya', 'rye', 'ryo', 'ryu', 'sa', 'se', 'sha', 'sho', 'shu', 'si', 'so', 'su', 'swi', 'sye', 'ta', 'te', 'ti', 'to', 'tsa', 'tse', 'tso', 'tsu', 'tswi', 'tu', 'tyu', 'u', 'wa', 'we', 'wi', 'wo', 'ya', 'ye', 'yo', 'yu', 'za', 'ze', 'zi', 'zo', 'zu', 'zwi'
 ]);
+
+const KANA_EX_SYLLABLES = new Set([
+  'aa', 'ae', 'aha', 'ahe', 'ahi', 'aho', 'ahu', 'ai', 'an', 'ao', 'au', 'awa', 'awe', 'awi', 'awo', 'aya', 'aye', 'ayo', 'ayu', 'ea', 'ee', 'eha', 'ehe', 'ehi', 'eho', 'ehu', 'ei', 'en', 'eo', 'eu', 'ewa', 'ewe', 'ewi', 'ewo', 'eya', 'eye', 'eyo', 'eyu', 'ia', 'ie', 'iha', 'ihe', 'ihi', 'iho', 'ihu', 'ii', 'in', 'io', 'iu', 'iwa', 'iwe', 'iwi', 'iwo', 'iya', 'iyo', 'iyu', 'oa', 'oe', 'oha', 'ohe', 'ohi', 'oho', 'ohu', 'oi', 'on', 'oo', 'ou', 'owa', 'owe', 'owi', 'owo', 'oya', 'oye', 'oyo', 'oyu', 'ua', 'ue', 'uha', 'uhe', 'uhi', 'uho', 'uhu', 'ui', 'un', 'uo', 'uu', 'uwa', 'uwe', 'uwi', 'uwo', 'uya', 'uye', 'uyo', 'uyu'
+]);
+
+const ALL_KANA_SYLLABLES = new Set([...KANA_SYLLABLES, ...KANA_EX_SYLLABLES]);
+const BONYARI_FUTSU_KANAEX = new Set([
+  'oa','oe','oha','ohe','ohi','oho','ohu','oi','on','oo','ou','owa','owe','owi','owo','oya','oye','oyo','oyu',
+  'ua','ue','uha','uhe','uhi','uho','uhu','ui','un','uo','uu','uwa','uwe','uwi','uwo','uya','uye','uyo','uyu'
+]);
+
+const VOICE_KANAEX_OVERRIDES = {
+  futsu: new Set([
+    'aa','ae','aha','ahe','ahi','aho','ahu','ai','an','ao','au','awa','awe','awi','awo','aya','aye','ayo','ayu',
+    'ea','ee','eha','ehe','ehi','eho','ehu','ei','en','eo','eu','ewa','ewe','ewi','ewo','eya','eye','eyo','eyu',
+    'ia','ie','iha','ihe','ihi','iho','ihu','ii','in','io','iu','iwa','iwe','iwi','iwo','iya','iyo','iyu'
+  ]),
+  ghost: new Set(['aa','ae','ai','an','ao','au','ea','ee','ei','en','eo','eu','ia','ie','ii','in','io','iu','oa','oe','oi','on','oo','ou','ua','ue','ui','un','uo','uu']),
+  hakihaki: new Set(['oa','oe','oha','ohe','ohi','oho','ohu','oi','on','oo','ou','owa','owe','owi','owo','oya','oye','oyo','oyu','ua','ue','uha','uhe','uhi','uho','uhu','ui','un','uo','uu','uwa','uwe','uwi','uwo','uya','uye','uyo','uyu']),
+};
+
+const VOICE_KANA_OVERRIDES = {
+  ghost: new Set(['a','e','i','n','o','u']),
+  hakihaki: new Set(['a','ba','be','bi','bo','bu','bya','bye','byo','byu','cha','che','chi','cho','chu','da','de','di','do','du','dyu','e','fa','fe','fi','fo','fyo','fyu','ga','ge','gi','go','gu','gwa','gwe','gwi','gwo','gya','gye','gyo','gyu','ha','he','hi','ho','hu','hya','hye','hyo','hyu','i','ja','je','jo','ju','ka','ke','ki','ko','ku','kwa','kwe','kwi','kwo','kya','kye','kyo','kyu','ma','me','mi','mo','mu','mya','mye','myo','myu','n','na','ne','ni','no','nu','nya','nye','nyo','nyu','o','pa','pe','pi','po','pu','pya','pye','pyo','pyu','ra']),
+};
 
 // English letter → best-matching confirmed KanaEx syllable
 // Strategy: map consonant sounds to phonetically close vowel chains
@@ -399,13 +420,17 @@ const LETTER_MAP = {
   '5':'uha','6':'uwa','7':'awa','8':'ahe','9':'un',
 };
 
-// swkbd files: only exist for BONYARI voice
-// swkbd_en: letters F G J N R Z  | digits 2 3 5 6 7 8 9
-// swkbd_de: letters J Y           | digits 0-9
-const SWKBD_EN_LETTERS = new Set(['F','G','J','N','R','Z']);
-const SWKBD_DE_LETTERS = new Set(['J','Y']);
-const SWKBD_EN_DIGITS  = new Set(['2','3','5','6','7','8','9']);
-const SWKBD_DE_DIGITS  = new Set(['0','1','2','3','4','5','6','7','8','9']);
+// swkbd localization samples available per locale + voice
+const SWKBD_INDEX = {
+  en: {
+    bonyari: { alph:new Set(['F','G','J','N','R','Z']), digit:new Set(['2','3','7','8']) },
+    futsu:   { alph:new Set(['C','E','F','G','Q','T','V','W','Y']), digit:new Set(['1','2','5','8']) },
+  },
+  de: {
+    bonyari: { alph:new Set(['J','Y']), digit:new Set(['0','1','2','3','4','5','6','7','8','9']) },
+    futsu:   { alph:new Set(['J','Y','Z']), digit:new Set(['0','1','3','4','5','7','8','9']) },
+  }
+};
 
 /* ============================================================
    STATE
@@ -450,8 +475,8 @@ function setLocale(loc) {
   document.getElementById('locale-en').className = `locale-badge ${loc==='en'?'active':'inactive'}`;
   document.getElementById('locale-de').className = `locale-badge ${loc==='de'?'active':'inactive'}`;
   const note = document.getElementById('locale-note');
-  if (loc === 'en') note.textContent = 'EN: letters F G J N R Z use authentic per-letter samples (Bonyari only)';
-  else               note.textContent = 'DE: letters J Y + digits 0–9 use authentic samples (Bonyari only)';
+  if (loc === 'en') note.textContent = 'EN swkbd: available letter/digit samples are used when present for the selected voice';
+  else               note.textContent = 'DE swkbd: available letter/digit samples are used when present for the selected voice';
   updatePreview();
 }
 
@@ -471,36 +496,49 @@ function clearText() {
 }
 window.clearText = clearText;
 
+function bindSliderNumber(sliderId, inputId, labelId, formatFn) {
+  const slider = document.getElementById(sliderId);
+  const input  = document.getElementById(inputId);
+  const label  = document.getElementById(labelId);
+  if (!slider || !input || !label) return;
+
+  const min = parseFloat(slider.min);
+  const max = parseFloat(slider.max);
+
+  const applyValue = (raw) => {
+    let value = parseFloat(raw);
+    if (Number.isNaN(value)) value = parseFloat(slider.value);
+    value = Math.min(max, Math.max(min, value));
+    slider.value = String(value);
+    input.value  = String(value);
+    label.textContent = formatFn(value);
+  };
+
+  slider.addEventListener('input', () => applyValue(slider.value));
+  input.addEventListener('input',  () => applyValue(input.value));
+  input.addEventListener('change', () => applyValue(input.value));
+  applyValue(slider.value);
+}
+
 /* ============================================================
    TOKEN RESOLUTION
    Each character → { label, url, isSpace, isPunct }
 ============================================================ */
-function resolveToken(ch) {
+function resolveSingleToken(ch) {
   const upper = ch.toUpperCase();
 
   // Whitespace → pause
   if (/[\s\n\t]/.test(ch)) return { label:'·', url:null, isSpace:true };
 
-  // Period → dedicated dot sound
-  if (ch === '.' || ch === '…') {
-    return { label:'.', url:`${BASE}/others/Voice_Dot.wav`, isPunct:true };
-  }
-
-  // Other punctuation → short pause
-  if (/[,;:!?'"()\-–—\/\\]/.test(ch)) {
-    return { label:ch, url:null, isSpace:true, isPunct:true };
-  }
+  const swkbdVoice = SWKBD_INDEX[currentLocale]?.[selectedVoice];
 
   // Digit
   if (/[0-9]/.test(ch)) {
-    // swkbd only for bonyari
-    if (selectedVoice === 'bonyari') {
-      const hasSwkbd = currentLocale === 'de' ? SWKBD_DE_DIGITS.has(ch) : SWKBD_EN_DIGITS.has(ch);
-      if (hasSwkbd) {
-        const folder  = currentLocale === 'de' ? 'swkbd_de' : 'swkbd_en';
-        const langTag = currentLocale === 'de' ? 'Ger' : 'Eng';
-        return { label:ch, url:`${BASE}/${folder}/Voice_Swkbd_Bonyari_Digit_${langTag}_${ch}.wav` };
-      }
+    if (swkbdVoice?.digit?.has(ch)) {
+      const folder  = currentLocale === 'de' ? 'swkbd_de' : 'swkbd_en';
+      const langTag = currentLocale === 'de' ? 'Ger' : 'Eng';
+      const vName = VOICE_FILE[selectedVoice] || 'Futsu';
+      return { label:ch, url:`${BASE}/${folder}/Voice_Swkbd_${vName}_Digit_${langTag}_${ch}.wav` };
     }
     const syl = LETTER_MAP[ch] || 'aa';
     return { label:ch, url:kanaUrl(syl) };
@@ -508,32 +546,79 @@ function resolveToken(ch) {
 
   // Letter A–Z
   if (/[A-Za-z]/.test(ch)) {
-    // swkbd only for bonyari
-    if (selectedVoice === 'bonyari') {
-      const hasSwkbd = currentLocale === 'de' ? SWKBD_DE_LETTERS.has(upper) : SWKBD_EN_LETTERS.has(upper);
-      if (hasSwkbd) {
-        const folder  = currentLocale === 'de' ? 'swkbd_de' : 'swkbd_en';
-        const langTag = currentLocale === 'de' ? 'Ger' : 'Eng';
-        return { label:ch, url:`${BASE}/${folder}/Voice_Swkbd_Bonyari_Alph_${langTag}_${upper}.wav` };
-      }
+    if (swkbdVoice?.alph?.has(upper)) {
+      const folder  = currentLocale === 'de' ? 'swkbd_de' : 'swkbd_en';
+      const langTag = currentLocale === 'de' ? 'Ger' : 'Eng';
+      const vName = VOICE_FILE[selectedVoice] || 'Futsu';
+      return { label:ch, url:`${BASE}/${folder}/Voice_Swkbd_${vName}_Alph_${langTag}_${upper}.wav` };
     }
     const syl = LETTER_MAP[upper] || 'aa';
     return { label:ch, url:kanaUrl(syl) };
   }
 
-  // Unknown → skip
-  return { label:ch, url:null, isSpace:true };
+  // Any other special character → dedicated dot sound
+  return { label:ch, url:`${BASE}/others/Voice_Dot.wav`, isPunct:true };
 }
 
 function kanaUrl(syllable) {
-  // Validate syllable exists; fall back to 'aa' if not
-  const syl = KANA_SYLLABLES.has(syllable) ? syllable : 'aa';
+  const syl = pickAvailableSyllable(syllable);
   const vName = VOICE_FILE[selectedVoice] || 'Futsu';
-  return `${BASE}/${selectedVoice}/Voice_${vName}_KanaEx_${syl}.wav`;
+  if (voiceHasKanaEx(syl)) {
+    const exVoiceName = (selectedVoice === 'bonyari' && BONYARI_FUTSU_KANAEX.has(syl)) ? 'Futsu' : vName;
+    return `${BASE}/${selectedVoice}/Voice_${exVoiceName}_KanaEx_${syl}.wav`;
+  }
+  return `${BASE}/${selectedVoice}/Voice_${vName}_Kana_${syl}.wav`;
+}
+
+function voiceKanaSet() { return VOICE_KANA_OVERRIDES[selectedVoice] || KANA_SYLLABLES; }
+function voiceKanaExSet() { return VOICE_KANAEX_OVERRIDES[selectedVoice] || KANA_EX_SYLLABLES; }
+function voiceHasKana(syl) { return voiceKanaSet().has(syl); }
+function voiceHasKanaEx(syl) { return voiceKanaExSet().has(syl); }
+function voiceHasSyllable(syl) { return voiceHasKanaEx(syl) || voiceHasKana(syl); }
+
+function pickAvailableSyllable(syllable) {
+  const syl = ALL_KANA_SYLLABLES.has(syllable) ? syllable : 'aa';
+  if (voiceHasSyllable(syl)) return syl;
+  const fallbackVowel = [...syl].reverse().find(ch => 'aeiou'.includes(ch)) || 'a';
+  if (voiceHasKanaEx(fallbackVowel + fallbackVowel)) return fallbackVowel + fallbackVowel;
+  if (voiceHasKana(fallbackVowel)) return fallbackVowel;
+  if (voiceHasKanaEx('aa')) return 'aa';
+  if (voiceHasKana('a')) return 'a';
+  return [...voiceKanaSet()][0] || [...voiceKanaExSet()][0] || 'a';
 }
 
 function buildTokens(text) {
-  return [...text].map(ch => resolveToken(ch));
+  const out = [];
+  let i = 0;
+  while (i < text.length) {
+    const ch = text[i];
+    if (/[A-Za-z]/.test(ch)) {
+      let j = i;
+      while (j < text.length && /[A-Za-z]/.test(text[j])) j++;
+      const word = text.slice(i, j);
+      let k = 0;
+      while (k < word.length) {
+        const remaining = word.slice(k).toLowerCase();
+        let matched = null;
+        for (let len = Math.min(4, remaining.length); len >= 2; len--) {
+          const cand = remaining.slice(0, len);
+          if (ALL_KANA_SYLLABLES.has(cand) && voiceHasSyllable(cand)) { matched = cand; break; }
+        }
+        if (matched) {
+          out.push({ label:word.slice(k, k + matched.length), url:kanaUrl(matched) });
+          k += matched.length;
+        } else {
+          out.push(resolveSingleToken(word[k]));
+          k += 1;
+        }
+      }
+      i = j;
+      continue;
+    }
+    out.push(resolveSingleToken(ch));
+    i += 1;
+  }
+  return out;
 }
 
 /* ============================================================
@@ -580,17 +665,19 @@ async function loadBuffer(url) {
   } catch(e) { return null; }
 }
 
-/* Play a single buffer, returns a Promise that resolves when done */
-function playOnce(ctx, buffer, playbackRate, pitchDetune) {
-  return new Promise(resolve => {
-    const src = ctx.createBufferSource();
-    src.buffer       = buffer;
-    src.playbackRate.value = playbackRate;
-    src.detune.value = pitchDetune;
-    src.connect(ctx.destination);
-    src.onended = () => resolve();
-    src.start(0);
-  });
+/* Start a single buffer and return its end-promise + duration */
+function startOnce(ctx, buffer, playbackRate, pitchDetune, startOffsetMs = 0) {
+  const src = ctx.createBufferSource();
+  src.buffer = buffer;
+  src.playbackRate.value = playbackRate;
+  src.detune.value = pitchDetune;
+  src.connect(ctx.destination);
+  const ended = new Promise(resolve => { src.onended = () => resolve(); });
+  const offsetSec = Math.max(0, startOffsetMs / 1000);
+  src.start(0, offsetSec);
+  const totalDurationMs = (buffer.duration / playbackRate) * 1000;
+  const durationMs = Math.max(0, totalDurationMs - startOffsetMs);
+  return { ended, durationMs, totalDurationMs };
 }
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
@@ -635,6 +722,8 @@ async function playSpeech() {
   // Sequential playback
   const speakPills = document.querySelectorAll('#speaking-display .char-pill');
 
+  let lastEndedPromise = null;
+  let carrySkipMs = 0;
   for (let i = 0; i < tokens.length; i++) {
     if (stopRequested) break;
 
@@ -657,14 +746,24 @@ async function playSpeech() {
     }
 
     const ctx = getAudioCtx();
-    await playOnce(ctx, buf, speed, detune);
+    const safeSkipMs = Math.min(carrySkipMs, Math.max(0, (buf.duration / speed) * 1000 - 1));
+    const playback = startOnce(ctx, buf, speed, detune, safeSkipMs);
+    lastEndedPromise = playback.ended;
+    carrySkipMs = 0;
 
     doneCount++;
     progressBar.style.width = `${(doneCount / totalSound) * 100}%`;
 
-    if (gapMs > 0 && !stopRequested) await sleep(gapMs);
+    if (stopRequested) break;
+    let intervalMs = playback.durationMs + gapMs;
+    if (intervalMs < 0) {
+      carrySkipMs = Math.min(500, -intervalMs);
+      intervalMs = 0;
+    }
+    if (intervalMs > 0) await sleep(intervalMs);
   }
 
+  if (!stopRequested && lastEndedPromise) await lastEndedPromise;
   speakPills.forEach(p => p.classList.remove('active'));
   finishPlaying();
 }
@@ -843,6 +942,9 @@ function encodeWav(buffer) {
    INIT
 ============================================================ */
 buildVoiceGrid();
+bindSliderNumber('speed-slider', 'speed-input', 'speed-val', v => `${v.toFixed(2)}×`);
+bindSliderNumber('pitch-slider', 'pitch-input', 'pitch-val', v => `${v.toFixed(2)}×`);
+bindSliderNumber('gap-slider',   'gap-input',   'gap-val',   v => `${Math.round(v)} ms`);
 
 // Make global functions accessible
 window.setLocale    = setLocale;
