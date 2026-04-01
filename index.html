@@ -589,9 +589,9 @@ function pickAvailableSyllable(syllable) {
 
 function buildTokens(text) {
   const normalizeSilentH = (word) => {
-    // Silence vowel+h at the end of a chunk or before consonants:
-    // "oh" -> "o", "ahn" -> "an", while keeping "aha"/"ohi" intact.
-    return word.replace(/([aeiou])h(?![aeiouy])/gi, '$1');
+    // Treat "ah/eh/ih/oh/uh" patterns as silent-h pronunciations.
+    // This intentionally removes h after vowels anywhere in letter runs.
+    return word.replace(/([aeiou])h/gi, '$1');
   };
 
   const out = [];
