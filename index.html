@@ -666,16 +666,18 @@ async function loadBuffer(url) {
 }
 
 /* Start a single buffer and return its end-promise + duration */
-function startOnce(ctx, buffer, playbackRate, pitchDetune) {
+function startOnce(ctx, buffer, playbackRate, pitchDetune, startOffsetMs = 0) {
   const src = ctx.createBufferSource();
   src.buffer = buffer;
   src.playbackRate.value = playbackRate;
   src.detune.value = pitchDetune;
   src.connect(ctx.destination);
   const ended = new Promise(resolve => { src.onended = () => resolve(); });
-  src.start(0);
-  const durationMs = (buffer.duration / playbackRate) * 1000;
-  return { ended, durationMs };
+  const offsetSec = Math.max(0, startOffsetMs / 1000);
+  src.start(0, offsetSec);
+  const totalDurationMs = (buffer.duration / playbackRate) * 1000;
+  const durationMs = Math.max(0, totalDurationMs - startOffsetMs);
+  return { ended, durationMs, totalDurationMs };
 }
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
@@ -721,6 +723,7 @@ async function playSpeech() {
   const speakPills = document.querySelectorAll('#speaking-display .char-pill');
 
   let lastEndedPromise = null;
+  let carrySkipMs = 0;
   for (let i = 0; i < tokens.length; i++) {
     if (stopRequested) break;
 
@@ -743,14 +746,20 @@ async function playSpeech() {
     }
 
     const ctx = getAudioCtx();
-    const playback = startOnce(ctx, buf, speed, detune);
+    const safeSkipMs = Math.min(carrySkipMs, Math.max(0, (buf.duration / speed) * 1000 - 1));
+    const playback = startOnce(ctx, buf, speed, detune, safeSkipMs);
     lastEndedPromise = playback.ended;
+    carrySkipMs = 0;
 
     doneCount++;
     progressBar.style.width = `${(doneCount / totalSound) * 100}%`;
 
     if (stopRequested) break;
-    const intervalMs = Math.max(0, playback.durationMs + gapMs);
+    let intervalMs = playback.durationMs + gapMs;
+    if (intervalMs < 0) {
+      carrySkipMs = Math.min(500, -intervalMs);
+      intervalMs = 0;
+    }
     if (intervalMs > 0) await sleep(intervalMs);
   }
 
