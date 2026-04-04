@@ -278,6 +278,16 @@
           <input type="number" id="gap-input" min="-200" max="200" step="5" value="30" class="w-20 px-2 py-1 rounded border text-xs font-bold" style="border-color:#b08020; color:#7a4f2d;"/>
         </div>
       </div>
+      <div class="mb-5">
+        <label class="text-xs font-bold flex justify-between mb-2" style="color:#7a4f2d;">
+          <span><i class="fa-solid fa-hourglass-half mr-1"></i>Pause after punctuation + space (, . ! ?)</span>
+          <span id="punct-pause-val" class="font-black" style="color:#8b5cf6;">120 ms</span>
+        </label>
+        <div class="flex items-center gap-2">
+          <input type="range" id="punct-pause-slider" min="0" max="600" step="10" value="120" class="flex-1"/>
+          <input type="number" id="punct-pause-input" min="0" max="600" step="10" value="120" class="w-20 px-2 py-1 rounded border text-xs font-bold" style="border-color:#8b5cf6; color:#6d28d9;"/>
+        </div>
+      </div>
 
       <!-- Action buttons -->
       <div class="flex flex-wrap gap-3 items-center">
@@ -558,7 +568,8 @@ function resolveSingleToken(ch) {
   }
 
   // Any other special character → dedicated dot sound
-  return { label:ch, url:`${BASE}/others/Voice_Dot.wav`, isPunct:true };
+  const pausePunct = (ch === ',' || ch === '.' || ch === '!' || ch === '?');
+  return { label:ch, url:`${BASE}/others/Voice_Dot.wav`, isPunct:true, pausePunct };
 }
 
 function kanaUrl(syllable) {
@@ -721,6 +732,7 @@ async function playSpeech() {
   const speed    = parseFloat(document.getElementById('speed-slider').value);
   const pitch    = parseFloat(document.getElementById('pitch-slider').value);
   const gapMs    = parseInt(document.getElementById('gap-slider').value);
+  const punctPauseMs = parseInt(document.getElementById('punct-pause-slider').value);
   const detune   = Math.round((Math.log2(pitch)) * 1200); // semitones in cents
 
   const progressBar  = document.getElementById('progress-bar');
@@ -780,6 +792,8 @@ async function playSpeech() {
       intervalMs = 0;
     }
     if (intervalMs > 0) await sleep(intervalMs);
+    const nextTok = tokens[i + 1];
+    if (tok.pausePunct && nextTok?.isSpace && punctPauseMs > 0 && !stopRequested) await sleep(punctPauseMs);
   }
 
   if (!stopRequested && lastEndedPromise) await lastEndedPromise;
@@ -857,6 +871,7 @@ async function downloadAudio() {
   const speed  = parseFloat(document.getElementById('speed-slider').value);
   const pitch  = parseFloat(document.getElementById('pitch-slider').value);
   const gapMs  = parseInt(document.getElementById('gap-slider').value);
+  const punctPauseMs = parseInt(document.getElementById('punct-pause-slider').value);
   const detune = Math.round((Math.log2(pitch)) * 1200);
 
   // Fetch all buffers
@@ -871,12 +886,17 @@ async function downloadAudio() {
 
   // Calculate total length
   let totalSamps = 0;
-  for (const tok of tokens) {
+  for (let i = 0; i < tokens.length; i++) {
+    const tok = tokens[i];
     if (tok.isSpace) { totalSamps += SPACE_SAMPS; continue; }
     if (!tok.url) continue;
     const buf = bufMap[tok.url];
     if (!buf) { totalSamps += Math.round(SR * 0.06); continue; }
     totalSamps += Math.round(buf.length / speed) + GAP_SAMPS;
+    const nextTok = tokens[i + 1];
+    if (tok.pausePunct && nextTok?.isSpace && punctPauseMs > 0) {
+      totalSamps += Math.round((punctPauseMs / 1000) * SR);
+    }
   }
 
   if (totalSamps <= 0) {
@@ -889,7 +909,8 @@ async function downloadAudio() {
   const offCtx = new OfflineAudioContext(1, totalSamps, SR);
   let cursorSec = 0;
 
-  for (const tok of tokens) {
+  for (let i = 0; i < tokens.length; i++) {
+    const tok = tokens[i];
     if (tok.isSpace) { cursorSec += SPACE_SAMPS / SR; continue; }
     if (!tok.url) continue;
     const buf = bufMap[tok.url];
@@ -920,6 +941,8 @@ async function downloadAudio() {
     src.start(cursorSec);
 
     cursorSec += (srcBuf.length / speed) / SR + GAP_SAMPS / SR;
+    const nextTok = tokens[i + 1];
+    if (tok.pausePunct && nextTok?.isSpace && punctPauseMs > 0) cursorSec += punctPauseMs / 1000;
   }
 
   let rendered;
@@ -974,6 +997,7 @@ buildVoiceGrid();
 bindSliderNumber('speed-slider', 'speed-input', 'speed-val', v => `${v.toFixed(2)}×`);
 bindSliderNumber('pitch-slider', 'pitch-input', 'pitch-val', v => `${v.toFixed(2)}×`);
 bindSliderNumber('gap-slider',   'gap-input',   'gap-val',   v => `${Math.round(v)} ms`);
+bindSliderNumber('punct-pause-slider', 'punct-pause-input', 'punct-pause-val', v => `${Math.round(v)} ms`);
 
 // Make global functions accessible
 window.setLocale    = setLocale;
